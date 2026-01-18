@@ -1,0 +1,6 @@
+
+{
+  "name": "Impostor App",
+  "description": "A fun, offline party game for up to 20 players to find the imposter. Players get a secret word, but one person is the imposter and must blend in. Perfect for playing with friends anywhere, anytime, without needing an internet connection.",
+  "requestFramePermissions": []
+}
