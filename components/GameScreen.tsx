@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import type { Player } from '../types';
-import Card, { CARD_COLORS } from './Card';
+import Card from './Card';
 
 interface GameScreenProps {
   players: Player[];
@@ -39,7 +39,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, onGameEnd 
 
   const currentPlayer = players[currentIndex];
   const isLastPlayer = currentIndex === players.length - 1;
-  const cardColor = CARD_COLORS[currentIndex % CARD_COLORS.length];
+  const cardColor = currentPlayer.color;
   const progressPercentage = ((currentIndex + 1) / players.length) * 100;
 
   return (

@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { GameState, Player, GameConfig } from './types';
 import { getAllWords } from './constants/words';
+import { getCardColors } from './components/Card';
 
 import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
@@ -52,10 +53,22 @@ const App: React.FC = () => {
       }
     }
 
-    const newPlayers = currentNames.map((name, index) => ({
-      name,
-      isImposter: imposterIndices.has(index),
-    }));
+    // Gerar cores aleatórias para cada jogador
+    const availableColorIndices = Array.from({ length: 15 }, (_, i) => i);
+    // Embaralhar as cores
+    for (let i = availableColorIndices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [availableColorIndices[i], availableColorIndices[j]] = [availableColorIndices[j], availableColorIndices[i]];
+    }
+    
+    const newPlayers = currentNames.map((name, index) => {
+      const colorIndex = availableColorIndices[index % availableColorIndices.length];
+      return {
+        name,
+        isImposter: imposterIndices.has(index),
+        color: getCardColors(colorIndex),
+      };
+    });
     setPlayers(newPlayers);
   }, [usedWords]);
 

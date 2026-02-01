@@ -1,17 +1,31 @@
 
 import React, { useState } from 'react';
 
-export const CARD_COLORS: string[][] = [
-  ["#EF5350", "#E53935"],
-  ["#8D6E63", "#6D4C41"],
-  ["#66BB6A", "#43A047"],
-  ["#FF9800", "#F57C00"],
-  ["#78909C", "#546E7A"],
-  ["#FFEB3B", "#FBC02D"],
-  ["#42A5F5", "#1E88E5"],
-  ["#EC407A", "#D81B60"],
-  ["#AB47BC", "#8E24AA"],
+// Paleta base mais vibrante e saturada
+const COLOR_PALETTE = [
+  { base: '#FFB347', darker: '#FF9500' }, // Golden Sand - mais vibrante
+  { base: '#FF6B9D', darker: '#FF4D7A' }, // Coral - rosa mais saturado
+  { base: '#FF8FA3', darker: '#FF6B85' }, // Wild Watermelon - rosa vibrante
+  { base: '#7FCDCD', darker: '#5FB3B3' }, // Peace - azul-turquesa mais vivo
+  { base: '#5DADE2', darker: '#3498DB' }, // French Sky Blue - azul mais saturado
+  { base: '#85C1E2', darker: '#5DADE2' }, // Saturated Sky - azul médio vibrante
+  { base: '#82E0AA', darker: '#58D68D' }, // Lime Soap - verde mais vivo
+  { base: '#52E252', darker: '#2ECC71' }, // UFO Green - verde vibrante
+  { base: '#74B9FF', darker: '#0984E3' }, // Clear Chill - azul claro vibrante
+  { base: '#6C5CE7', darker: '#5F3DC4' }, // Bright Greek - azul profundo
+  { base: '#A29BFE', darker: '#6C5CE7' }, // Roxo suave
+  { base: '#FD79A8', darker: '#E84393' }, // Rosa vibrante
+  { base: '#FDCB6E', darker: '#E17055' }, // Laranja vibrante
+  { base: '#55EFC4', darker: '#00B894' }, // Verde água
+  { base: '#81ECEC', darker: '#00CEC9' }, // Ciano vibrante
 ];
+
+// Função para gerar cores dinamicamente baseadas no índice
+export const getCardColors = (index: number): string[] => {
+  const colorIndex = index % COLOR_PALETTE.length;
+  const color = COLOR_PALETTE[colorIndex];
+  return [color.base, color.darker];
+};
 
 const IMPOSTER_COLORS = ["#d32f2f", "#c62828"];
 

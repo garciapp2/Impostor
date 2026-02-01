@@ -8,6 +8,7 @@ export enum GameState {
 export interface Player {
   name: string;
   isImposter: boolean;
+  color: string[];
 }
 
 export interface GameConfig {
