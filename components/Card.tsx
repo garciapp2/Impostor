@@ -33,7 +33,7 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, isImposter, colo
 
   return (
     <div
-      className="w-full h-96 relative"
+      className="w-full max-w-sm h-[400px] relative"
       onMouseDown={handleInteractionStart}
       onMouseUp={handleInteractionEnd}
       onMouseLeave={handleInteractionEnd}
@@ -44,15 +44,15 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, isImposter, colo
         className={`w-full h-full absolute transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
       >
         {/* Card Front */}
-        <div style={frontGradientStyle} className="absolute w-full h-full backface-hidden rounded-2xl shadow-2xl flex flex-col items-center justify-center p-4 text-white">
-            <span className="text-sm uppercase tracking-widest opacity-80">PRÓXIMO JOGADOR</span>
-            <span className="text-5xl md:text-6xl text-center break-words mt-2">{frontContent.replace('Passe para ', '')}</span>
+        <div style={frontGradientStyle} className="absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 text-white">
+            <span className="text-xs uppercase tracking-wider opacity-90 mb-4">PRÓXIMO JOGADOR</span>
+            <span className="text-4xl font-bold text-center break-words leading-tight">{frontContent.replace('Passe para ', '')}</span>
         </div>
 
         {/* Card Back */}
-        <div style={backGradientStyle} className={`absolute w-full h-full backface-hidden rounded-2xl shadow-2xl flex flex-col items-center justify-center p-4 rotate-y-180 text-white`}>
-          <span className="text-sm uppercase tracking-widest opacity-80">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
-          <span className="text-4xl md:text-5xl text-center break-words mt-2">{backContent}</span>
+        <div style={backGradientStyle} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 text-white`}>
+          <span className="text-xs uppercase tracking-wider opacity-90 mb-4">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
+          <span className="text-3xl font-bold text-center break-words leading-tight">{backContent}</span>
         </div>
       </div>
     </div>

@@ -43,14 +43,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, onGameEnd 
   const progressPercentage = ((currentIndex + 1) / players.length) * 100;
 
   return (
-    <div className="flex flex-col items-center justify-between h-full w-full"
+    <div className="flex flex-col items-center justify-between h-full w-full px-4"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="w-full">
-        <p className="text-3xl text-sky-600 text-center mb-2">Jogador {currentIndex + 1} de {players.length}</p>
-        <div className="w-full bg-sky-100 rounded-full h-2.5">
-            <div className="bg-sky-500 h-2.5 rounded-full transition-all duration-300 ease-out" style={{width: `${progressPercentage}%`}}></div>
+      <div className="w-full pt-6">
+        <p className="text-sm font-semibold text-gray-700 text-center mb-3">
+          Jogador {currentIndex + 1} de {players.length}
+        </p>
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
+          <div 
+            className="h-1.5 rounded-full transition-all duration-300 ease-out" 
+            style={{width: `${progressPercentage}%`, backgroundColor: '#5352ed'}}
+          ></div>
         </div>
       </div>
       
@@ -64,15 +69,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, onGameEnd 
         />
       </div>
 
-      <p className="text-2xl text-gray-500 -mt-2">
-        (Pressione o card para ver)
+      <p className="text-sm text-gray-500 mb-4 text-center">
+        Toque no card para ver
       </p>
 
       <button
         onClick={handleNext}
-        className="mt-6 text-4xl text-white px-10 py-3 rounded-full shadow-lg active:scale-95 transform transition-transform duration-150 ease-in-out bg-gradient-to-br from-pink-500 to-red-500"
+        className="w-full max-w-sm mb-6 py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all"
+        style={{ backgroundColor: '#5352ed' }}
       >
-        {isLastPlayer ? 'Revelar Impostor' : 'Próximo Jogador'}
+        {isLastPlayer ? 'Continuar' : 'Próximo Jogador'}
       </button>
 
     </div>
