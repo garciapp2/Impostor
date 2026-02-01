@@ -33,26 +33,33 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, isImposter, colo
 
   return (
     <div
-      className="w-full max-w-sm h-[400px] relative"
+      className="w-full max-w-sm h-[400px] relative select-none"
       onMouseDown={handleInteractionStart}
       onMouseUp={handleInteractionEnd}
       onMouseLeave={handleInteractionEnd}
-      onTouchStart={handleInteractionStart}
-      onTouchEnd={handleInteractionEnd}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        handleInteractionStart();
+      }}
+      onTouchEnd={(e) => {
+        e.preventDefault();
+        handleInteractionEnd();
+      }}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'manipulation' }}
     >
       <div
         className={`w-full h-full absolute transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
       >
         {/* Card Front */}
-        <div style={frontGradientStyle} className="absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 text-white">
-            <span className="text-xs uppercase tracking-wider opacity-90 mb-4">PRÓXIMO JOGADOR</span>
-            <span className="text-4xl font-bold text-center break-words leading-tight">{frontContent.replace('Passe para ', '')}</span>
+        <div style={{ ...frontGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className="absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 text-white select-none">
+            <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">PRÓXIMO JOGADOR</span>
+            <span className="text-4xl font-bold text-center break-words leading-tight select-none">{frontContent.replace('Passe para ', '')}</span>
         </div>
 
         {/* Card Back */}
-        <div style={backGradientStyle} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 text-white`}>
-          <span className="text-xs uppercase tracking-wider opacity-90 mb-4">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
-          <span className="text-3xl font-bold text-center break-words leading-tight">{backContent}</span>
+        <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 text-white select-none`}>
+          <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
+          <span className="text-3xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
         </div>
       </div>
     </div>
