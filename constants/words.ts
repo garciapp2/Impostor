@@ -82,10 +82,14 @@ export const CATEGORIES: WordCategory[] = [
     id: 'musica',
     name: '🎵 Música',
     words: [
-      'Acordeão', 'Bateria', 'Baixo', 'Banjo', 'Cavaquinho', 'Clarinete',
-      'Flauta', 'Gaita', 'Guitarra', 'Harpa', 'Maraca', 'Microfone', 'Piano',
-      'Pandeiro', 'Saxofone', 'Tambor', 'Trompete', 'Trombone', 'Ukulele',
-      'Violão', 'Violino', 'Xilofone', 'Teclado'
+      'Acordeão', 'Axé', 'Bateria', 'Baixo', 'Banjo',
+      'Bossa Nova', 'Cavaquinho', 'Clarinete', 'Eletrônica', 'Flamengo',
+      'Flauta', 'Forró', 'Funk', 'Gaita', 'Guitarra',
+      'Harpa', 'Hip Hop', 'Jazz', 'Maraca', 'MPB',
+      'Microfone', 'Pagode', 'Pandeiro', 'Piano', 'Pop',
+      'Rap', 'Reggae', 'Rock', 'Samba', 'Saxofone',
+      'Sertanejo', 'Tambor', 'Teclado', 'Trap', 'Trompete',
+      'Trombone', 'Ukulele', 'Violão', 'Violino', 'Xilofone'
     ]
   },
   {
