@@ -70,6 +70,10 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
   return (
     <div className="flex flex-col h-full text-center px-4">
       <div className="flex-1 flex flex-col items-center justify-center space-y-4 overflow-y-auto py-4">
+        {/* Título Hora da Verdade */}
+        <div className={`w-full mb-4 ${revealStep >= 1 ? 'animate-fade-in' : 'opacity-0'}`}>
+          <h1 className="text-4xl font-bold text-gray-800 drop-shadow-sm">Hora da Verdade!</h1>
+        </div>
         {/* Palavra Secreta */}
         <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
           <p className="text-sm opacity-90 mb-2">A palavra secreta era:</p>
