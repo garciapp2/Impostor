@@ -34,7 +34,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
 
   if (!isRevealed) {
     return (
-      <div className="flex flex-col h-full text-center px-4">
+      <div className="flex flex-col h-full text-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="flex-1 flex flex-col items-center justify-center space-y-6">
           <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: '#5352ed' }}>
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,15 +42,15 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
             </svg>
           </div>
           <div className="space-y-3">
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">
               Jogo iniciado!
             </p>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-gray-700 dark:text-gray-300 transition-colors duration-200">
               Hora de conversar e pegar o Impostor.
             </p>
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-500 mb-2">Começa falando:</p>
-              <p className="text-xl font-semibold text-indigo-600">{firstPlayerName}</p>
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-200">Começa falando:</p>
+              <p className="text-xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-200">{firstPlayerName}</p>
             </div>
           </div>
         </div>
@@ -68,11 +68,11 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
   }
 
   return (
-    <div className="flex flex-col h-full text-center px-4">
+    <div className="flex flex-col h-full text-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="flex-1 flex flex-col items-center justify-center space-y-4 overflow-y-auto py-4">
         {/* Título Hora da Verdade */}
         <div className={`w-full mb-4 ${revealStep >= 1 ? 'animate-fade-in' : 'opacity-0'}`}>
-          <h1 className="text-4xl font-bold text-gray-800 drop-shadow-sm">Hora da Verdade!</h1>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 drop-shadow-sm transition-colors duration-200">Hora da Verdade!</h1>
         </div>
         {/* Palavra Secreta */}
         <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
@@ -111,7 +111,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
         </button>
         <button
           onClick={onBackToStart}
-          className="w-full py-4 rounded-2xl font-semibold text-gray-700 shadow-sm active:scale-98 transition-all bg-white border border-gray-200 flex items-center justify-center space-x-2"
+          className="w-full py-4 rounded-2xl font-semibold text-gray-700 dark:text-gray-300 shadow-sm active:scale-98 transition-all bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { GameState, Player, GameConfig, GameMode } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { getCardColors } from './components/Card';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
@@ -286,13 +287,15 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gray-50">
-      <main className="w-full max-w-md mx-auto h-screen flex flex-col overflow-hidden relative">
-        <div className={`w-full h-full ${isTransitioning ? 'screen-exit' : 'screen-enter'}`}>
-          {renderScreen()}
-        </div>
-      </main>
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <main className="w-full max-w-md mx-auto h-screen flex flex-col overflow-hidden relative">
+          <div className={`w-full h-full ${isTransitioning ? 'screen-exit' : 'screen-enter'}`}>
+            {renderScreen()}
+          </div>
+        </main>
+      </div>
+    </ThemeProvider>
   );
 };
 

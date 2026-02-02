@@ -97,15 +97,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
   const progressPercentage = ((currentIndex + 1) / players.length) * 100;
 
   return (
-    <div className="flex flex-col items-center justify-between h-full w-full px-4"
+    <div className="flex flex-col items-center justify-between h-full w-full px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <div className="w-full pt-6">
-        <p className="text-sm font-semibold text-gray-700 text-center mb-3">
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center mb-3 transition-colors duration-200">
           Jogador {currentIndex + 1} de {players.length}
         </p>
-        <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 transition-colors duration-200">
           <div 
             className="h-1.5 rounded-full transition-all duration-300 ease-out" 
             style={{width: `${progressPercentage}%`, backgroundColor: '#5352ed'}}
@@ -153,7 +153,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
         )}
       </div>
 
-      <p className="text-sm text-gray-500 mb-4 text-center">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center transition-colors duration-200">
         Segure no card para ver
       </p>
 
