@@ -9,12 +9,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    // Verificar preferência salva no localStorage ou preferência do sistema
+    // Verificar preferência salva no localStorage, padrão é modo claro
     const saved = localStorage.getItem('theme');
     if (saved) {
       return saved === 'dark';
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return false; // Padrão: modo claro
   });
 
   useEffect(() => {
