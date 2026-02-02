@@ -131,6 +131,18 @@ export const CATEGORIES: WordCategory[] = [
       'Ator', 'Cantor', 'DJ', 'Programador', 'Designer', 'Artesão',
       'Agricultor', 'Pescador', 'Veterinário', 'Dentista', 'Psicólogo'
     ]
+  },
+  {
+    id: 'nsfw',
+    name: '🔞 NSFW',
+    words: [
+      'Pau', 'Buceta', 'Bunda', 'Peito', 'Mamilo', 'Clitóris', 'Cu',
+      'Chupar', 'Boquete', 'Punheta', 'Punheteiro', 'Masturbação',
+      'Transar', 'Anal', '69', 'Gangbang', 'Menage',
+      'Tesão', 'Ereção', 'Pau-mole', 'Orgasmo', 'Gozo', 'Squirt',
+      'Vibrador', 'Consolo', 'Plug-anal', 'Camisinha', 'Lubrificante', 'DIU',
+      'Pornô', 'Nude', 'Calcinha', 'Sutiã', 'Lingerie', 'Strip', 'Fetiche'
+    ]
   }
 ];
 
