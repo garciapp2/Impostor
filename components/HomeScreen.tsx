@@ -1,15 +1,21 @@
 
 import React, { useState } from 'react';
 import { CATEGORIES } from '../constants/words';
+import { GameMode } from '../types';
 
 interface HomeScreenProps {
+  gameMode: GameMode;
   playerCount: number;
   imposterMin: number;
   imposterMax: number;
+  jokerMin: number;
+  jokerMax: number;
   playerNames: string[];
   selectedCategories: string[];
+  onGameModeChange: (mode: GameMode) => void;
   onPlayerCountChange: (count: number) => void;
   onImposterRangeChange: (min: number, max: number) => void;
+  onJokerRangeChange: (min: number, max: number) => void;
   onPlayerNameChange: (index: number, name: string) => void;
   onCategoryToggle: (categoryId: string) => void;
   onCategoriesChange: (categories: string[]) => void;
@@ -17,13 +23,18 @@ interface HomeScreenProps {
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({
+  gameMode,
   playerCount,
   imposterMin,
   imposterMax,
+  jokerMin,
+  jokerMax,
   playerNames,
   selectedCategories,
+  onGameModeChange,
   onPlayerCountChange,
   onImposterRangeChange,
+  onJokerRangeChange,
   onPlayerNameChange,
   onCategoryToggle,
   onCategoriesChange,
@@ -32,6 +43,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const [isExpanded, setIsExpanded] = useState({
     players: true,
     imposters: false,
+    jokers: false,
     categories: false,
   });
 
@@ -40,6 +52,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     imposterMin >= 0 &&
     imposterMax <= playerCount &&
     imposterMin <= imposterMax &&
+    (gameMode === GameMode.CLASSIC || (jokerMin >= 0 && jokerMax <= playerCount && jokerMin <= jokerMax)) &&
     selectedCategories.length > 0 &&
     playerNames.every(name => name.trim() !== '');
 
@@ -55,6 +68,46 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
       {/* Content */}
       <div className="px-4 pb-4 space-y-3">
+        {/* Game Mode Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-4 py-4">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900">Modo de Jogo</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onGameModeChange(GameMode.CLASSIC)}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.CLASSIC
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-700 border border-gray-200 active:bg-gray-100'
+                }`}
+                style={gameMode === GameMode.CLASSIC ? { backgroundColor: '#5352ed' } : {}}
+              >
+                Clássico
+              </button>
+              <button
+                onClick={() => onGameModeChange(GameMode.JOKER)}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.JOKER
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-700 border border-gray-200 active:bg-gray-100'
+                }`}
+                style={gameMode === GameMode.JOKER ? { backgroundColor: '#5352ed' } : {}}
+              >
+                Coringa
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Player Count Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
@@ -238,6 +291,119 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
         </div>
 
+        {/* Joker Range Section - Only visible in JOKER mode */}
+        {gameMode === GameMode.JOKER && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <button
+              onClick={() => setIsExpanded({ ...isExpanded, jokers: !isExpanded.jokers })}
+              className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900">Coringas</p>
+                  <p className="text-xs text-gray-500">
+                    {jokerMin === jokerMax 
+                      ? `${jokerMin} coringa${jokerMin !== 1 ? 's' : ''}`
+                      : `${jokerMin}-${jokerMax} coringas`
+                    }
+                  </p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded.jokers ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {isExpanded.jokers && (
+              <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                <div className="flex items-end justify-center gap-6 max-w-xs mx-auto">
+                  <div className="flex flex-col items-center space-y-2">
+                    <label className="text-xs font-medium text-gray-700">Mínimo</label>
+                    <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (jokerMin > 0) onJokerRangeChange(jokerMin - 1, jokerMax);
+                        }}
+                        disabled={jokerMin <= 0}
+                        className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <span className="text-base font-bold text-gray-900 min-w-[2.5rem] text-center">{jokerMin}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (jokerMin < jokerMax) {
+                            onJokerRangeChange(jokerMin + 1, jokerMax);
+                          }
+                        }}
+                        disabled={jokerMin >= jokerMax}
+                        className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="pb-2 text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-center space-y-2">
+                    <label className="text-xs font-medium text-gray-700">Máximo</label>
+                    <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (jokerMax > jokerMin) {
+                            onJokerRangeChange(jokerMin, jokerMax - 1);
+                          }
+                        }}
+                        disabled={jokerMax <= jokerMin}
+                        className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <span className="text-base font-bold text-gray-900 min-w-[2.5rem] text-center">{jokerMax}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (jokerMax < playerCount) {
+                            onJokerRangeChange(jokerMin, jokerMax + 1);
+                          }
+                        }}
+                        disabled={jokerMax >= playerCount}
+                        className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Categories Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
@@ -337,7 +503,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           {!canStart && selectedCategories.length === 0 && 'Selecione pelo menos uma categoria'}
           {!canStart && selectedCategories.length > 0 && imposterMax > playerCount && 'Muitos impostores'}
           {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin > imposterMax && 'Range inválido'}
-          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && playerNames.some(n => !n.trim()) && 'Preencha todos os nomes'}
+          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && gameMode === GameMode.JOKER && (jokerMax > playerCount || jokerMin > jokerMax) && 'Range de coringas inválido'}
+          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && (gameMode === GameMode.CLASSIC || (jokerMax <= playerCount && jokerMin <= jokerMax)) && playerNames.some(n => !n.trim()) && 'Preencha todos os nomes'}
           {canStart && 'Começar Jogo'}
         </button>
       </div>

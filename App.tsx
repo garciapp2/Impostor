@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { GameState, Player, GameConfig } from './types';
+import { GameState, Player, GameConfig, GameMode } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { getCardColors } from './components/Card';
 
@@ -12,9 +12,12 @@ const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.HOME);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameConfig, setGameConfig] = useState<GameConfig>({
+    gameMode: GameMode.CLASSIC,
     playerCount: 3,
     imposterMin: 1,
     imposterMax: 1,
+    jokerMin: 0,
+    jokerMax: 0,
     playerNames: ['Jogador 1', 'Jogador 2', 'Jogador 3'],
     selectedCategories: ['objetos'],
   });
@@ -23,14 +26,25 @@ const App: React.FC = () => {
   const [usedWords, setUsedWords] = useState<string[]>([]);
 
   const handleStartGame = () => {
-    setupNewRound(gameConfig.playerNames, gameConfig.imposterMin, gameConfig.imposterMax, gameConfig.selectedCategories);
+    setupNewRound(
+      gameConfig.gameMode,
+      gameConfig.playerNames, 
+      gameConfig.imposterMin, 
+      gameConfig.imposterMax,
+      gameConfig.jokerMin,
+      gameConfig.jokerMax,
+      gameConfig.selectedCategories
+    );
     setGameState(GameState.GAME);
   };
 
   const setupNewRound = useCallback((
+    gameMode: GameMode,
     currentNames: string[],
     imposterMin: number,
     imposterMax: number,
+    jokerMin: number,
+    jokerMax: number,
     selectedCategories: string[]
   ) => {
     const availableWords = getAllWords(selectedCategories).filter(w => !usedWords.includes(w));
@@ -56,6 +70,21 @@ const App: React.FC = () => {
       }
     }
 
+    // Select random jokers within range (only in JOKER mode)
+    const jokerIndices = new Set<number>();
+    if (gameMode === GameMode.JOKER) {
+      const jokerCount = Math.floor(Math.random() * (jokerMax - jokerMin + 1)) + jokerMin;
+      if (jokerCount > 0) {
+        // Make sure jokers don't overlap with imposters
+        const availableIndices = Array.from({ length: currentNames.length }, (_, i) => i)
+          .filter(i => !imposterIndices.has(i));
+        const shuffled = [...availableIndices].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < Math.min(jokerCount, shuffled.length); i++) {
+          jokerIndices.add(shuffled[i]);
+        }
+      }
+    }
+
     // Gerar cores aleatórias para cada jogador
     const availableColorIndices = Array.from({ length: 15 }, (_, i) => i);
     // Embaralhar as cores
@@ -69,6 +98,7 @@ const App: React.FC = () => {
       return {
         name,
         isImposter: imposterIndices.has(index),
+        isJoker: jokerIndices.has(index),
         color: getCardColors(colorIndex),
       };
     });
@@ -77,9 +107,12 @@ const App: React.FC = () => {
 
   const handleNewRound = () => {
     setupNewRound(
+      gameConfig.gameMode,
       gameConfig.playerNames,
       gameConfig.imposterMin,
       gameConfig.imposterMax,
+      gameConfig.jokerMin,
+      gameConfig.jokerMax,
       gameConfig.selectedCategories
     );
     setGameState(GameState.GAME);
@@ -104,11 +137,17 @@ const App: React.FC = () => {
       case GameState.HOME:
         return (
           <HomeScreen
+            gameMode={gameConfig.gameMode}
             playerCount={gameConfig.playerCount}
             imposterMin={gameConfig.imposterMin}
             imposterMax={gameConfig.imposterMax}
+            jokerMin={gameConfig.jokerMin}
+            jokerMax={gameConfig.jokerMax}
             playerNames={gameConfig.playerNames}
             selectedCategories={gameConfig.selectedCategories}
+            onGameModeChange={(mode) => {
+              setGameConfig({ ...gameConfig, gameMode: mode });
+            }}
             onPlayerCountChange={(count) => {
               const newNames = Array.from({ length: count }, (_, i) => 
                 gameConfig.playerNames[i] || `Jogador ${i + 1}`
@@ -118,11 +157,16 @@ const App: React.FC = () => {
                 playerCount: count,
                 playerNames: newNames,
                 imposterMin: Math.min(gameConfig.imposterMin, count),
-                imposterMax: Math.min(gameConfig.imposterMax, count)
+                imposterMax: Math.min(gameConfig.imposterMax, count),
+                jokerMin: Math.min(gameConfig.jokerMin, count),
+                jokerMax: Math.min(gameConfig.jokerMax, count)
               });
             }}
             onImposterRangeChange={(min, max) => {
               setGameConfig({ ...gameConfig, imposterMin: min, imposterMax: max });
+            }}
+            onJokerRangeChange={(min, max) => {
+              setGameConfig({ ...gameConfig, jokerMin: min, jokerMax: max });
             }}
             onPlayerNameChange={handlePlayerNameChange}
             onCategoryToggle={(categoryId) => {
@@ -149,10 +193,14 @@ const App: React.FC = () => {
       case GameState.REVEAL:
         const imposters = players.filter(p => p.isImposter);
         const imposterNames = imposters.map(p => p.name).join(', ');
+        const jokers = players.filter(p => p.isJoker);
+        const jokerNames = jokers.map(p => p.name).join(', ');
         return (
           <RevealScreen 
             imposterNames={imposterNames}
             imposterCount={imposters.length}
+            jokerNames={jokerNames}
+            jokerCount={jokers.length}
             totalPlayers={players.length}
             onNewRound={handleNewRound}
             onBackToStart={handleBackToStart}

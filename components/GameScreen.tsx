@@ -67,6 +67,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
           backContent={currentPlayer.isImposter ? 'VOCÊ É O IMPOSTOR' : secretWord}
           category={currentPlayer.isImposter ? '' : secretWordCategory}
           isImposter={currentPlayer.isImposter}
+          isJoker={currentPlayer.isJoker}
           colors={cardColor}
         />
       </div>

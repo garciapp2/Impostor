@@ -28,23 +28,31 @@ export const getCardColors = (index: number): string[] => {
 };
 
 const IMPOSTER_COLORS = ["#d32f2f", "#c62828"];
+const JOKER_COLORS = ["#f59e0b", "#d97706"];
 
 interface CardProps {
   frontContent: string;
   backContent: string;
   category: string;
   isImposter: boolean;
+  isJoker: boolean;
   colors: string[];
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, colors }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => setIsFlipped(true);
   const handleInteractionEnd = () => setIsFlipped(false);
   
   const frontGradientStyle = { backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`};
-  const backGradientStyle = { backgroundImage: `linear-gradient(to bottom right, ${isImposter ? IMPOSTER_COLORS[0] : colors[0]}, ${isImposter ? IMPOSTER_COLORS[1] : colors[1]})`};
+  const backGradientStyle = { 
+    backgroundImage: `linear-gradient(to bottom right, ${
+      isImposter ? IMPOSTER_COLORS[0] : isJoker ? JOKER_COLORS[0] : colors[0]
+    }, ${
+      isImposter ? IMPOSTER_COLORS[1] : isJoker ? JOKER_COLORS[1] : colors[1]
+    })`
+  };
 
   return (
     <div
@@ -72,14 +80,31 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
         </div>
 
         {/* Card Back */}
-        <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 text-white select-none`}>
-          {!isImposter && category && (
-            <span className="text-xs font-medium opacity-90 absolute top-6 left-0 right-0 text-center select-none">Categoria: {category}</span>
-          )}
-          <div className="flex flex-col items-center justify-center">
-            <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
-            <span className="text-3xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
+        <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center ${isJoker ? 'justify-between' : 'justify-center'} p-6 rotate-y-180 text-white select-none`}>
+          {/* Top: Category */}
+          <div className={`w-full flex justify-center ${isJoker ? 'pt-2' : 'absolute top-6'}`}>
+            {!isImposter && category && (
+              <span className="text-xs font-medium opacity-90 text-center select-none">Categoria: {category}</span>
+            )}
+            {isImposter && (
+              <span className="text-xs uppercase tracking-wider opacity-90 text-center select-none">Sua Identidade</span>
+            )}
           </div>
+
+          {/* Middle: Word */}
+          <div className="flex flex-col items-center justify-center flex-grow">
+            {!isImposter && (
+              <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">A Palavra Secreta é</span>
+            )}
+            <span className="text-4xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
+          </div>
+
+          {/* Bottom: Joker message */}
+          {isJoker && (
+            <div className="w-full flex justify-center pb-2">
+              <span className="text-2xl font-bold uppercase tracking-wider select-none drop-shadow-lg">VOCÊ É O CORINGA</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

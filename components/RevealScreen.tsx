@@ -4,17 +4,20 @@ import React, { useState } from 'react';
 interface RevealScreenProps {
   imposterNames: string;
   imposterCount: number;
+  jokerNames: string;
+  jokerCount: number;
   totalPlayers: number;
   onNewRound: () => void;
   onBackToStart: () => void;
 }
 
-const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, totalPlayers, onNewRound, onBackToStart }) => {
+const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, onNewRound, onBackToStart }) => {
   const [isRevealed, setIsRevealed] = useState(false);
 
   const isNone = imposterCount === 0;
   const isAll = imposterCount === totalPlayers;
   const displayText = isNone ? 'Ninguém!' : isAll ? 'Todos!' : imposterNames;
+  const hasJokers = jokerCount > 0;
 
   if (!isRevealed) {
     return (
@@ -45,13 +48,21 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
 
   return (
     <div className="flex flex-col h-full text-center px-4">
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center space-y-4">
         <div className="w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 animate-reveal" style={{ backgroundColor: '#ef4444' }}>
           <p className="text-lg opacity-90 mb-4">
             {isNone ? 'O impostor era:' : isAll ? 'Os impostores eram:' : imposterCount > 1 ? 'Os impostores eram:' : 'O impostor era:'}
           </p>
           <p className="text-4xl font-bold drop-shadow-lg leading-tight">{displayText}</p>
         </div>
+        {hasJokers && (
+          <div className="w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 animate-reveal" style={{ backgroundColor: '#f59e0b' }}>
+            <p className="text-lg opacity-90 mb-4">
+              {jokerCount > 1 ? 'Os coringas eram:' : 'O coringa era:'}
+            </p>
+            <p className="text-4xl font-bold drop-shadow-lg leading-tight">{jokerNames}</p>
+          </div>
+        )}
       </div>
       <div className="flex flex-col space-y-3 w-full max-w-sm pb-6">
         <button
