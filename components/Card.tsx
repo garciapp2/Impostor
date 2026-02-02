@@ -37,13 +37,20 @@ interface CardProps {
   isImposter: boolean;
   isJoker: boolean;
   colors: string[];
+  onFlipped?: (flipped: boolean) => void;
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, onFlipped }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const handleInteractionStart = () => setIsFlipped(true);
-  const handleInteractionEnd = () => setIsFlipped(false);
+  const handleInteractionStart = () => {
+    setIsFlipped(true);
+    onFlipped?.(true);
+  };
+  const handleInteractionEnd = () => {
+    setIsFlipped(false);
+    onFlipped?.(false);
+  };
   
   const frontGradientStyle = { backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`};
   const backGradientStyle = { 

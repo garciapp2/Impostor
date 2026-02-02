@@ -24,6 +24,7 @@ const App: React.FC = () => {
   const [secretWord, setSecretWord] = useState<string>('');
   const [secretWordCategory, setSecretWordCategory] = useState<string>('');
   const [usedWords, setUsedWords] = useState<string[]>([]);
+  const [firstPlayerIndex, setFirstPlayerIndex] = useState<number>(0);
 
   const handleStartGame = () => {
     setupNewRound(
@@ -102,6 +103,11 @@ const App: React.FC = () => {
         color: getCardColors(colorIndex),
       };
     });
+    
+    // Escolher jogador aleatório para começar
+    const randomFirstPlayerIndex = Math.floor(Math.random() * newPlayers.length);
+    setFirstPlayerIndex(randomFirstPlayerIndex);
+    
     setPlayers(newPlayers);
   }, [usedWords]);
 
@@ -195,6 +201,7 @@ const App: React.FC = () => {
         const imposterNames = imposters.map(p => p.name).join(', ');
         const jokers = players.filter(p => p.isJoker);
         const jokerNames = jokers.map(p => p.name).join(', ');
+        const firstPlayer = players.length > 0 && firstPlayerIndex < players.length ? players[firstPlayerIndex].name : '';
         return (
           <RevealScreen 
             imposterNames={imposterNames}
@@ -202,6 +209,8 @@ const App: React.FC = () => {
             jokerNames={jokerNames}
             jokerCount={jokers.length}
             totalPlayers={players.length}
+            secretWord={secretWord}
+            firstPlayerName={firstPlayer}
             onNewRound={handleNewRound}
             onBackToStart={handleBackToStart}
           />

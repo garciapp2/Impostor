@@ -234,11 +234,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (imposterMin < imposterMax) {
-                          onImposterRangeChange(imposterMin + 1, imposterMax);
+                        if (imposterMin < playerCount) {
+                          const newMin = imposterMin + 1;
+                          const newMax = newMin > imposterMax ? newMin : imposterMax;
+                          onImposterRangeChange(newMin, newMax);
                         }
                       }}
-                      disabled={imposterMin >= imposterMax}
+                      disabled={imposterMin >= playerCount}
                       className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,11 +260,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (imposterMax > imposterMin) {
-                          onImposterRangeChange(imposterMin, imposterMax - 1);
+                        if (imposterMax > 0) {
+                          const newMax = imposterMax - 1;
+                          const newMin = newMax < imposterMin ? newMax : imposterMin;
+                          onImposterRangeChange(newMin, newMax);
                         }
                       }}
-                      disabled={imposterMax <= imposterMin}
+                      disabled={imposterMax <= 0}
                       className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,11 +350,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (jokerMin < jokerMax) {
-                            onJokerRangeChange(jokerMin + 1, jokerMax);
+                          if (jokerMin < playerCount) {
+                            const newMin = jokerMin + 1;
+                            const newMax = newMin > jokerMax ? newMin : jokerMax;
+                            onJokerRangeChange(newMin, newMax);
                           }
                         }}
-                        disabled={jokerMin >= jokerMax}
+                        disabled={jokerMin >= playerCount}
                         className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,11 +376,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (jokerMax > jokerMin) {
-                            onJokerRangeChange(jokerMin, jokerMax - 1);
+                          if (jokerMax > 0) {
+                            const newMax = jokerMax - 1;
+                            const newMin = newMax < jokerMin ? newMax : jokerMin;
+                            onJokerRangeChange(newMin, newMax);
                           }
                         }}
-                        disabled={jokerMax <= jokerMin}
+                        disabled={jokerMax <= 0}
                         className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform shadow-sm"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
