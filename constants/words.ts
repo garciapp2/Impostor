@@ -113,11 +113,11 @@ export const CATEGORIES: WordCategory[] = [
       'Esgrima', 'F1', 'Futebol', 'Futevôlei', 'Futsal',
       'Ginástica', 'Golfe', 'Halterofilismo', 'Handebol', 'Hipismo',
       'Hóquei', 'Jiu-jitsu', 'Judô', 'Karate', 'Luta-livre',
-      'Maratona', 'MMA', 'Motocross', 'MTB', 'Nado-artístico',
-      'Natação', 'Padel', 'Paraquedismo', 'Patinação', 'Ping-pong',
+      'Maratona', 'MMA', 'Motocross', 'MTB',
+      'Natação', 'Paraquedismo', 'Patinação', 'Ping-pong',
       'Remo', 'Rugby', 'Sinuca', 'Skate', 'Surfe',
       'Taekwondo', 'Tênis', 'Tiro', 'Triatlo', 'Vela',
-      'Vôlei', 'Vôlei-de-praia', 'Windsurf'
+      'Vôlei', 'Windsurf'
     ]
   },
   {
@@ -160,7 +160,7 @@ export const CATEGORIES: WordCategory[] = [
     name: '🔞 NSFW',
     words: [
       'Pau', 'Buceta', 'Bunda', 'Peito', 'Mamilo', 'Clitóris', 'Cu',
-      'Chupar', 'Boquete', 'Punheta', 'Punheteiro', 'Masturbação',
+      'Boquete', 'Punheta', 'Punheteiro', 'Masturbação',
       'Transar', 'Anal', '69', 'Gangbang', 'Menage',
       'Tesão', 'Ereção', 'Pau-mole', 'Orgasmo', 'Gozo', 'Squirt',
       'Vibrador', 'Consolo', 'Plug-anal', 'Camisinha', 'Lubrificante', 'DIU',
