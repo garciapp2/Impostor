@@ -103,33 +103,52 @@ export const CATEGORIES: WordCategory[] = [
     id: 'esportes',
     name: '⚽ Esportes',
     words: [
-      'Basquete', 'Futebol', 'Vôlei', 'Tênis', 'Natação', 'Corrida',
-      'Ciclismo', 'Boxe', 'Judô', 'Karate', 'Skate', 'Surfe',
-      'Patinação', 'Ginástica', 'Handebol', 'Rugby', 'Beisebol',
-      'Golfe', 'Ping pong', 'Badminton', 'Hipismo', 'Formula 1',
-      'Motocross', 'Paraquedismo', 'Escalada'
+      'Atletismo', 'Badminton', 'Basquete', 'Beach-soccer', 'Beach-tennis',
+      'Beisebol', 'BMX', 'Boxe', 'Breakdance', 'Capoeira',
+      'Ciclismo', 'Corrida', 'Crossfit', 'Dardos', 'Escalada',
+      'Esgrima', 'F1', 'Futebol', 'Futevôlei', 'Futsal',
+      'Ginástica', 'Golfe', 'Halterofilismo', 'Handebol', 'Hipismo',
+      'Hóquei', 'Jiu-jitsu', 'Judô', 'Karate', 'Luta-livre',
+      'Maratona', 'MMA', 'Motocross', 'MTB', 'Nado-artístico',
+      'Natação', 'Padel', 'Paraquedismo', 'Patinação', 'Ping-pong',
+      'Remo', 'Rugby', 'Sinuca', 'Skate', 'Surfe',
+      'Taekwondo', 'Tênis', 'Tiro', 'Triatlo', 'Vela',
+      'Vôlei', 'Vôlei-de-praia', 'Windsurf'
     ]
   },
   {
     id: 'natureza',
     name: '🌿 Natureza',
     words: [
-      'Árvore', 'Cachoeira', 'Cacto', 'Cogumelo', 'Estrela-do-mar',
-      'Flor', 'Folha', 'Montanha', 'Neve', 'Nuvem', 'Onda',
-      'Pedra', 'Pôr-do-sol', 'Raio', 'Rio', 'Sol', 'Tempestade',
-      'Trilha', 'Vulcão', 'Arco-íris', 'Lago', 'Deserto', 'Floresta',
-      'Oceano', 'Geleira', 'Aurora boreal', 'Fogo', 'Fumaça'
+      'Água', 'Árvore', 'Ar', 'Arco-íris', 'Areia',
+      'Aurora boreal', 'Bambu', 'Cachoeira', 'Cacto', 'Campo',
+      'Caverna', 'Cogumelo', 'Cristal', 'Deserto', 'Estrela',
+      'Estrela-do-mar', 'Fogo', 'Floresta', 'Flor', 'Folha',
+      'Fumaça', 'Geleira', 'Gramas', 'Lago', 'Lua',
+      'Montanha', 'Neve', 'Nuvem', 'Onda', 'Oceano',
+      'Pedra', 'Pôr-do-sol', 'Raio', 'Relâmpago', 'Rio',
+      'Rocha', 'Sol', 'Tempestade', 'Terra', 'Trilha',
+      'Vento', 'Vulcão', 'Vale', 'Céu', 'Chuva',
+      'Raiz', 'Semente', 'Galho', 'Casca', 'Musgo',
+      'Lava', 'Gota', 'Brisa', 'Furacão', 'Tsunami'
     ]
   },
   {
     id: 'profissoes',
     name: '👨‍⚕️ Profissões',
     words: [
-      'Médico', 'Enfermeiro', 'Bombeiro', 'Policial', 'Professor',
-      'Cozinheiro', 'Padeiro', 'Cabeleireiro', 'Motorista', 'Piloto',
-      'Arquiteto', 'Engenheiro', 'Advogado', 'Jornalista', 'Fotógrafo',
-      'Ator', 'Cantor', 'DJ', 'Programador', 'Designer', 'Artesão',
-      'Agricultor', 'Pescador', 'Veterinário', 'Dentista', 'Psicólogo'
+      'Advogado', 'Agricultor', 'Arquiteto', 'Artesão', 'Ator',
+      'Babá', 'Barista', 'Barman', 'Bombeiro', 'Cabeleireiro',
+      'Caixa', 'Cantor', 'Carteiro', 'Chapeiro', 'Caminhoneiro',
+      'Confeiteiro', 'Contador', 'Cozinheiro', 'Dentista', 'Designer',
+      'DJ', 'Economista', 'Eletricista', 'Empreendedor', 'Encanador',
+      'Enfermeiro', 'Engenheiro', 'Entregador', 'Faxineiro', 'Farmacêutico',
+      'Fisioterapeuta', 'Fotógrafo', 'Garçom', 'Gerente', 'Influencer',
+      'Jardineiro', 'Jornalista', 'Manicure', 'Mecânico', 'Médico',
+      'Motorista', 'Nutricionista', 'Padeiro', 'Pedreiro', 'Personal trainer',
+      'Piloto', 'Policial', 'Porteiro', 'Professor', 'Programador',
+      'Psicólogo', 'Recepcionista', 'Repositor', 'Secretário', 'Segurança',
+      'Streamer', 'Vendedor', 'Veterinário', 'Vigia', 'Youtuber'
     ]
   },
   {
@@ -141,7 +160,8 @@ export const CATEGORIES: WordCategory[] = [
       'Transar', 'Anal', '69', 'Gangbang', 'Menage',
       'Tesão', 'Ereção', 'Pau-mole', 'Orgasmo', 'Gozo', 'Squirt',
       'Vibrador', 'Consolo', 'Plug-anal', 'Camisinha', 'Lubrificante', 'DIU',
-      'Pornô', 'Nude', 'Calcinha', 'Sutiã', 'Lingerie', 'Strip', 'Fetiche'
+      'Pornô', 'Nude', 'Calcinha', 'Sutiã', 'Lingerie', 'Strip', 'Fetiche', 'MDMA', 'LSD',
+      'Cocaína', 'Heroína', 'Crack', 'Maconha', 'Baseado', 'K9'
     ]
   }
 ];
