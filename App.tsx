@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { GameState, Player, GameConfig } from './types';
-import { getAllWords } from './constants/words';
+import { getAllWords, getCategoryForWord } from './constants/words';
 import { getCardColors } from './components/Card';
 
 import HomeScreen from './components/HomeScreen';
@@ -19,6 +19,7 @@ const App: React.FC = () => {
     selectedCategories: ['objetos'],
   });
   const [secretWord, setSecretWord] = useState<string>('');
+  const [secretWordCategory, setSecretWordCategory] = useState<string>('');
   const [usedWords, setUsedWords] = useState<string[]>([]);
 
   const handleStartGame = () => {
@@ -38,7 +39,9 @@ const App: React.FC = () => {
     }
     const allWords = getAllWords(selectedCategories);
     const word = allWords[Math.floor(Math.random() * allWords.length)];
+    const category = getCategoryForWord(word);
     setSecretWord(word);
+    setSecretWordCategory(category?.name || '');
     setUsedWords(prev => [...prev, word]);
 
     // Select random number of imposters within range
@@ -85,6 +88,7 @@ const App: React.FC = () => {
   const handleBackToStart = () => {
     setPlayers([]);
     setSecretWord('');
+    setSecretWordCategory('');
     setUsedWords([]);
     setGameState(GameState.HOME);
   };
@@ -138,6 +142,7 @@ const App: React.FC = () => {
           <GameScreen
             players={players}
             secretWord={secretWord}
+            secretWordCategory={secretWordCategory}
             onGameEnd={() => setGameState(GameState.REVEAL)}
           />
         );

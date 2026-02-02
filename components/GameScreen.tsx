@@ -6,10 +6,11 @@ import Card from './Card';
 interface GameScreenProps {
   players: Player[];
   secretWord: string;
+  secretWordCategory: string;
   onGameEnd: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, onGameEnd }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWordCategory, onGameEnd }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
@@ -64,6 +65,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, onGameEnd 
           key={currentIndex}
           frontContent={`Passe para ${currentPlayer.name}`}
           backContent={currentPlayer.isImposter ? 'VOCÊ É O IMPOSTOR' : secretWord}
+          category={currentPlayer.isImposter ? '' : secretWordCategory}
           isImposter={currentPlayer.isImposter}
           colors={cardColor}
         />

@@ -32,11 +32,12 @@ const IMPOSTER_COLORS = ["#d32f2f", "#c62828"];
 interface CardProps {
   frontContent: string;
   backContent: string;
+  category: string;
   isImposter: boolean;
   colors: string[];
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, isImposter, colors }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, colors }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => setIsFlipped(true);
@@ -72,8 +73,13 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, isImposter, colo
 
         {/* Card Back */}
         <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 text-white select-none`}>
-          <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
-          <span className="text-3xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
+          {!isImposter && category && (
+            <span className="text-xs font-medium opacity-90 absolute top-6 left-0 right-0 text-center select-none">Categoria: {category}</span>
+          )}
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">{isImposter ? 'Sua Identidade' : 'A Palavra Secreta é'}</span>
+            <span className="text-3xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
+          </div>
         </div>
       </div>
     </div>
