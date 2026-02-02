@@ -15,11 +15,22 @@ interface RevealScreenProps {
 
 const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, onNewRound, onBackToStart }) => {
   const [isRevealed, setIsRevealed] = useState(false);
+  const [revealStep, setRevealStep] = useState(0);
 
   const isNone = imposterCount === 0;
   const isAll = imposterCount === totalPlayers;
   const displayText = isNone ? 'Ninguém!' : isAll ? 'Todos!' : imposterNames;
   const hasJokers = jokerCount > 0;
+
+  const handleReveal = () => {
+    setIsRevealed(true);
+    // Animar os cards sequencialmente
+    setRevealStep(1);
+    setTimeout(() => setRevealStep(2), 200);
+    if (hasJokers) {
+      setTimeout(() => setRevealStep(3), 400);
+    }
+  };
 
   if (!isRevealed) {
     return (
@@ -45,7 +56,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
         </div>
         <div className="pb-6">
           <button
-            onClick={() => setIsRevealed(true)}
+            onClick={handleReveal}
             className="w-full max-w-sm py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all mx-auto"
             style={{ backgroundColor: '#5352ed' }}
           >
@@ -60,13 +71,13 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
     <div className="flex flex-col h-full text-center px-4">
       <div className="flex-1 flex flex-col items-center justify-center space-y-4 overflow-y-auto py-4">
         {/* Palavra Secreta */}
-        <div className="w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 animate-reveal" style={{ backgroundColor: '#5352ed' }}>
+        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
           <p className="text-sm opacity-90 mb-2">A palavra secreta era:</p>
           <p className="text-3xl font-bold drop-shadow-lg leading-tight">{secretWord}</p>
         </div>
 
         {/* Impostores */}
-        <div className="w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 animate-reveal" style={{ backgroundColor: '#ef4444' }}>
+        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
           <p className="text-lg opacity-90 mb-4">
             {isNone ? 'O impostor era:' : isAll ? 'Os impostores eram:' : imposterCount > 1 ? 'Os impostores eram:' : 'O impostor era:'}
           </p>
@@ -75,7 +86,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
 
         {/* Coringas */}
         {hasJokers && (
-          <div className="w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 animate-reveal" style={{ backgroundColor: '#f59e0b' }}>
+          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 ${revealStep >= 3 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#f59e0b' }}>
             <p className="text-lg opacity-90 mb-4">
               {jokerCount > 1 ? 'Os coringas eram:' : 'O coringa era:'}
             </p>
@@ -83,7 +94,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           </div>
         )}
       </div>
-      <div className="flex flex-col space-y-3 w-full max-w-sm pb-6">
+      <div className={`flex flex-col space-y-3 w-full max-w-sm pb-6 ${revealStep >= (hasJokers ? 3 : 2) ? 'animate-fade-in' : 'opacity-0'}`}>
         <button
           onClick={onNewRound}
           className="w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2"
@@ -113,8 +124,21 @@ const style = `
     0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
   .animate-reveal {
     animation: reveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
   }
 `;
 const styleSheet = document.createElement("style");

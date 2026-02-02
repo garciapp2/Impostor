@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GameState, Player, GameConfig, GameMode } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { getCardColors } from './components/Card';
@@ -10,6 +10,7 @@ import RevealScreen from './components/RevealScreen';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.HOME);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameConfig, setGameConfig] = useState<GameConfig>({
     gameMode: GameMode.CLASSIC,
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   const [firstPlayerIndex, setFirstPlayerIndex] = useState<number>(0);
 
   const handleStartGame = () => {
+    setIsTransitioning(true);
     setupNewRound(
       gameConfig.gameMode,
       gameConfig.playerNames, 
@@ -36,7 +38,10 @@ const App: React.FC = () => {
       gameConfig.jokerMax,
       gameConfig.selectedCategories
     );
-    setGameState(GameState.GAME);
+    setTimeout(() => {
+      setGameState(GameState.GAME);
+      setTimeout(() => setIsTransitioning(false), 10);
+    }, 200);
   };
 
   const setupNewRound = useCallback((
@@ -112,24 +117,36 @@ const App: React.FC = () => {
   }, [usedWords]);
 
   const handleNewRound = () => {
-    setupNewRound(
-      gameConfig.gameMode,
-      gameConfig.playerNames,
-      gameConfig.imposterMin,
-      gameConfig.imposterMax,
-      gameConfig.jokerMin,
-      gameConfig.jokerMax,
-      gameConfig.selectedCategories
-    );
-    setGameState(GameState.GAME);
+    setIsTransitioning(true);
+    // Aguardar a animação de saída terminar antes de atualizar os dados
+    setTimeout(() => {
+      // Atualizar os dados no meio da transição (quando a tela anterior já saiu)
+      setupNewRound(
+        gameConfig.gameMode,
+        gameConfig.playerNames,
+        gameConfig.imposterMin,
+        gameConfig.imposterMax,
+        gameConfig.jokerMin,
+        gameConfig.jokerMax,
+        gameConfig.selectedCategories
+      );
+      // Mudar para a tela de cards
+      setGameState(GameState.GAME);
+      // Finalizar a transição após a nova tela aparecer
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 200);
   };
 
   const handleBackToStart = () => {
-    setPlayers([]);
-    setSecretWord('');
-    setSecretWordCategory('');
-    setUsedWords([]);
-    setGameState(GameState.HOME);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setPlayers([]);
+      setSecretWord('');
+      setSecretWordCategory('');
+      setUsedWords([]);
+      setGameState(GameState.HOME);
+      setTimeout(() => setIsTransitioning(false), 10);
+    }, 200);
   };
 
   const handlePlayerNameChange = (index: number, name: string) => {
@@ -193,7 +210,13 @@ const App: React.FC = () => {
             players={players}
             secretWord={secretWord}
             secretWordCategory={secretWordCategory}
-            onGameEnd={() => setGameState(GameState.REVEAL)}
+            onGameEnd={() => {
+              setIsTransitioning(true);
+              setTimeout(() => {
+                setGameState(GameState.REVEAL);
+                setTimeout(() => setIsTransitioning(false), 10);
+              }, 200);
+            }}
           />
         );
       case GameState.REVEAL:
@@ -220,10 +243,54 @@ const App: React.FC = () => {
     }
   };
 
+  // Adicionar estilos de animação
+  useEffect(() => {
+    const style = `
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+      .screen-enter {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .screen-exit {
+        animation: fadeOut 0.2s ease-in forwards;
+        pointer-events: none;
+      }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = style;
+    document.head.appendChild(styleSheet);
+    
+    return () => {
+      if (document.head.contains(styleSheet)) {
+        document.head.removeChild(styleSheet);
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gray-50">
-      <main className="w-full max-w-md mx-auto h-screen flex flex-col overflow-hidden">
-        {renderScreen()}
+      <main className="w-full max-w-md mx-auto h-screen flex flex-col overflow-hidden relative">
+        <div className={`w-full h-full ${isTransitioning ? 'screen-exit' : 'screen-enter'}`}>
+          {renderScreen()}
+        </div>
       </main>
     </div>
   );
