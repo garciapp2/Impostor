@@ -288,8 +288,8 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        <main className="w-full max-w-md mx-auto h-screen flex flex-col overflow-hidden relative">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200 fixed inset-0">
+        <main className="w-full max-w-md mx-auto h-full flex flex-col overflow-hidden relative">
           <div className={`w-full h-full ${isTransitioning ? 'screen-exit' : 'screen-enter'}`}>
             {renderScreen()}
           </div>
