@@ -115,7 +115,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-4 space-y-3">
+      <div className="px-4 pb-28 space-y-3">
         {/* Game Mode Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
           <div className="px-4 py-4">
@@ -679,12 +679,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
-      {/* Start Button */}
-      <div className="px-4 pb-6 pt-4 bg-gradient-to-t from-white dark:from-gray-900 via-white dark:via-gray-900 to-transparent transition-colors duration-200">
+      {/* Start Button - Fixed */}
+      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-white dark:from-gray-900 via-white dark:via-gray-900 to-transparent transition-colors duration-200 z-40">
         <button
           onClick={onStartGame}
           disabled={!canStart}
-          className={`w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all ${
+          className={`w-full max-w-md mx-auto py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all block ${
             canStart
               ? ''
               : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
