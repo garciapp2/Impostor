@@ -74,8 +74,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       <div className="absolute top-4 left-4 z-50">
         <button
           onClick={() => setShowHowToPlay(true)}
-          className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm"
+          className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm focus:outline-none active:outline-none"
           aria-label="Como jogar"
+          onMouseDown={(e) => e.preventDefault()}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -87,8 +88,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       <div className="absolute top-4 right-4 z-50">
         <button
           onClick={toggleTheme}
-          className="relative w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="relative w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors duration-300 focus:outline-none active:outline-none"
           aria-label="Toggle dark mode"
+          onMouseDown={(e) => e.preventDefault()}
         >
           <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isDark ? 'translate-x-6' : 'translate-x-0'}`}>
             {isDark ? (
@@ -105,7 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       </div>
 
       {/* Header */}
-      <div className="pt-12 pb-2 px-4 text-center">
+      <div className="pt-16 pb-2 px-4 text-center">
         <h1 className="text-6xl font-extrabold mb-12 tracking-tight" style={{ color: '#5352ed', fontFamily: "'Poppins', sans-serif" }}>
           Impostor
         </h1>

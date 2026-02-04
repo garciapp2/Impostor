@@ -315,6 +315,11 @@ const App: React.FC = () => {
         const jokers = players.filter(p => p.isJoker);
         const jokerNames = jokers.map(p => p.name).join(', ');
         const firstPlayer = players.length > 0 && firstPlayerIndex < players.length ? players[firstPlayerIndex].name : '';
+        const imposterFakeWords = gameConfig.gameMode === GameMode.FAKE 
+          ? imposters
+              .filter(p => p.fakeWord)
+              .map(p => ({ name: p.name, word: p.fakeWord! }))
+          : undefined;
         return (
           <RevealScreen 
             imposterNames={imposterNames}
@@ -324,6 +329,8 @@ const App: React.FC = () => {
             totalPlayers={players.length}
             secretWord={secretWord}
             firstPlayerName={firstPlayer}
+            gameMode={gameConfig.gameMode}
+            imposterFakeWords={imposterFakeWords}
             onNewRound={handleNewRound}
             onBackToStart={handleBackToStart}
           />

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { GameMode } from '../types';
 
 interface RevealScreenProps {
   imposterNames: string;
@@ -9,11 +10,13 @@ interface RevealScreenProps {
   totalPlayers: number;
   secretWord: string;
   firstPlayerName: string;
+  gameMode: GameMode;
+  imposterFakeWords?: Array<{ name: string; word: string }>;
   onNewRound: () => void;
   onBackToStart: () => void;
 }
 
-const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, onNewRound, onBackToStart }) => {
+const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, gameMode, imposterFakeWords, onNewRound, onBackToStart }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealStep, setRevealStep] = useState(0);
 
@@ -21,6 +24,8 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
   const isAll = imposterCount === totalPlayers;
   const displayText = isNone ? 'Ninguém!' : isAll ? 'Todos!' : imposterNames;
   const hasJokers = jokerCount > 0;
+  const isFakeMode = gameMode === GameMode.FAKE;
+  const hasFakeWords = isFakeMode && imposterFakeWords && imposterFakeWords.length > 0;
 
   const handleReveal = () => {
     setIsRevealed(true);
@@ -81,11 +86,25 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
         </div>
 
         {/* Impostores */}
-        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
-          <p className="text-lg opacity-90 mb-4">
+        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
+          <p className="text-lg opacity-90 mb-3">
             {isNone ? 'O impostor era:' : isAll ? 'Os impostores eram:' : imposterCount > 1 ? 'Os impostores eram:' : 'O impostor era:'}
           </p>
-          <p className="text-4xl font-bold drop-shadow-lg leading-tight">{displayText}</p>
+          <p className="text-3xl font-bold drop-shadow-lg leading-tight mb-3">{displayText}</p>
+          
+          {/* Palavras dos Impostores (Modo Cegas) */}
+          {hasFakeWords && (
+            <div className="w-full mt-3 pt-3 border-t border-white border-opacity-30">
+              <p className="text-xs opacity-90 mb-2">
+                {imposterFakeWords!.length > 1 ? 'Palavras que receberam:' : 'Palavra que recebeu:'}
+              </p>
+              <div className="space-y-1.5 w-full">
+                {imposterFakeWords!.map((item, index) => (
+                  <p key={index} className="text-lg font-bold drop-shadow-lg leading-tight">{item.word}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Coringas */}
