@@ -48,6 +48,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     jokers: false,
     categories: false,
   });
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const canStart = 
     playerCount >= 3 &&
@@ -60,6 +61,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-y-auto scrollbar-custom transition-colors duration-200 relative">
+      {/* How to Play Button */}
+      <div className="absolute top-4 left-4 z-50">
+        <button
+          onClick={() => setShowHowToPlay(true)}
+          className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 shadow-sm"
+          aria-label="Como jogar"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      </div>
+
       {/* Dark Mode Toggle */}
       <div className="absolute top-4 right-4 z-50">
         <button
@@ -136,7 +150,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 }`}
                 style={gameMode === GameMode.FAKE ? { backgroundColor: '#5352ed' } : {}}
               >
-                Fake
+                Cegas
               </button>
             </div>
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
@@ -150,6 +164,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 {gameMode === GameMode.FAKE && (
                   <>O impostor recebe uma palavra diferente da mesma categoria e não sabe que é impostor. <strong>Objetivo:</strong> Descobrir o impostor ou enganar os outros.</>
                 )}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 italic transition-colors duration-200">
+                Para mais detalhes, clique no botão da esquerda em cima.
               </p>
             </div>
           </div>
@@ -563,6 +580,86 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           {canStart && 'Começar Jogo'}
         </button>
       </div>
+
+      {/* How to Play Modal */}
+      {showHowToPlay && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+          onClick={() => setShowHowToPlay(false)}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto transition-colors duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-200">Como jogar</h2>
+              <button
+                onClick={() => setShowHowToPlay(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Fechar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="px-6 py-6 space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">1.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Reúna 3 ou mais amigos e passe o celular entre eles.</p>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">2.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                    Cada jogador desliza para ver a palavra secreta — exceto {gameMode === GameMode.FAKE ? 'os impostores, que verão uma palavra diferente' : 'os impostores, que verão "VOCÊ É O IMPOSTOR"'}.
+                  </p>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">3.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Um por um, os jogadores dizem uma palavra relacionada à palavra secreta.</p>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">4.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                    {gameMode === GameMode.FAKE 
+                      ? 'O Impostor deve tentar se misturar sem saber que é impostor.'
+                      : 'O Impostor deve fingir e tentar se misturar sem saber a palavra.'
+                    }
+                  </p>
+                </div>
+                
+                {gameMode === GameMode.JOKER && (
+                  <div className="flex items-start space-x-3">
+                    <span className="text-red-500 font-bold text-lg flex-shrink-0">5.</span>
+                    <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">O Coringa conhece a palavra secreta e quer ser votado para fora.</p>
+                  </div>
+                )}
+                
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">{gameMode === GameMode.JOKER ? '6.' : '5.'}</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Continuem dando dicas e conversando até alguém achar que descobriu.</p>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">{gameMode === GameMode.JOKER ? '7.' : '6.'}</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Quando estiverem prontos, votem em quem acham que é o Impostor — depois revelem a verdade!</p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed transition-colors duration-200">
+                  * Grave o caos! Compartilhe suas rodadas mais engraçadas nas redes sociais e marque seus amigos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
