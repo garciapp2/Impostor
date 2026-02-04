@@ -37,10 +37,11 @@ interface CardProps {
   isImposter: boolean;
   isJoker: boolean;
   colors: string[];
+  isFakeWord?: boolean;
   onFlipped?: (flipped: boolean) => void;
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, onFlipped }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, onFlipped }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => {
@@ -90,17 +91,17 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
         <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center ${isJoker ? 'justify-between' : 'justify-center'} p-6 rotate-y-180 text-white select-none`}>
           {/* Top: Category */}
           <div className={`w-full flex justify-center ${isJoker ? 'pt-2' : 'absolute top-6'}`}>
-            {!isImposter && category && (
+            {(!isImposter || isFakeWord) && category && (
               <span className="text-xs font-medium opacity-90 text-center select-none">Categoria: {category}</span>
             )}
-            {isImposter && (
+            {isImposter && !isFakeWord && (
               <span className="text-xs uppercase tracking-wider opacity-90 text-center select-none">Sua Identidade</span>
             )}
           </div>
 
           {/* Middle: Word */}
           <div className="flex flex-col items-center justify-center flex-grow">
-            {!isImposter && (
+            {(!isImposter || isFakeWord) && (
               <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">A Palavra Secreta é</span>
             )}
             <span className="text-4xl font-bold text-center break-words leading-tight select-none">{backContent}</span>

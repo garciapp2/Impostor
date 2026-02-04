@@ -1,16 +1,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import type { Player } from '../types';
+import { GameMode } from '../types';
 import Card from './Card';
 
 interface GameScreenProps {
   players: Player[];
   secretWord: string;
   secretWordCategory: string;
+  gameMode: GameMode;
   onGameEnd: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWordCategory, onGameEnd }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWordCategory, gameMode, onGameEnd }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCardHeld, setIsCardHeld] = useState(false);
@@ -119,10 +121,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
           <Card
             key={`card-${currentIndex}`}
             frontContent={`Passe para ${currentPlayer.name}`}
-            backContent={currentPlayer.isImposter ? 'VOCÊ É O IMPOSTOR' : secretWord}
-            category={currentPlayer.isImposter ? '' : secretWordCategory}
-            isImposter={currentPlayer.isImposter}
+            backContent={
+              currentPlayer.isImposter 
+                ? (gameMode === GameMode.FAKE && currentPlayer.fakeWord ? currentPlayer.fakeWord : 'VOCÊ É O IMPOSTOR')
+                : secretWord
+            }
+            category={
+              currentPlayer.isImposter 
+                ? (gameMode === GameMode.FAKE && currentPlayer.fakeWord ? secretWordCategory : '')
+                : secretWordCategory
+            }
+            isImposter={currentPlayer.isImposter && gameMode !== GameMode.FAKE}
             isJoker={currentPlayer.isJoker}
+            isFakeWord={gameMode === GameMode.FAKE && currentPlayer.isImposter && !!currentPlayer.fakeWord}
             colors={cardColor}
             onFlipped={(flipped) => {
               if (flipped) {
@@ -138,10 +149,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
             <Card
               key={`next-${currentIndex + 1}`}
               frontContent={`Passe para ${players[currentIndex + 1].name}`}
-              backContent={players[currentIndex + 1].isImposter ? 'VOCÊ É O IMPOSTOR' : secretWord}
-              category={players[currentIndex + 1].isImposter ? '' : secretWordCategory}
-              isImposter={players[currentIndex + 1].isImposter}
+              backContent={
+                players[currentIndex + 1].isImposter 
+                  ? (gameMode === GameMode.FAKE && players[currentIndex + 1].fakeWord ? players[currentIndex + 1].fakeWord : 'VOCÊ É O IMPOSTOR')
+                  : secretWord
+              }
+              category={
+                players[currentIndex + 1].isImposter 
+                  ? (gameMode === GameMode.FAKE && players[currentIndex + 1].fakeWord ? secretWordCategory : '')
+                  : secretWordCategory
+              }
+              isImposter={players[currentIndex + 1].isImposter && gameMode !== GameMode.FAKE}
               isJoker={players[currentIndex + 1].isJoker}
+              isFakeWord={gameMode === GameMode.FAKE && players[currentIndex + 1].isImposter && !!players[currentIndex + 1].fakeWord}
               colors={players[currentIndex + 1].color}
               onFlipped={(flipped) => {
               if (flipped) {

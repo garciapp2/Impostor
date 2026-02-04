@@ -54,7 +54,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     imposterMin >= 0 &&
     imposterMax <= playerCount &&
     imposterMin <= imposterMax &&
-    (gameMode === GameMode.CLASSIC || (jokerMin >= 0 && jokerMax <= playerCount && jokerMin <= jokerMax)) &&
+    (gameMode === GameMode.CLASSIC || gameMode === GameMode.FAKE || (gameMode === GameMode.JOKER && jokerMin >= 0 && jokerMax <= playerCount && jokerMin <= jokerMax)) &&
     selectedCategories.length > 0 &&
     playerNames.every(name => name.trim() !== '');
 
@@ -127,6 +127,30 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               >
                 Coringa
               </button>
+              <button
+                onClick={() => onGameModeChange(GameMode.FAKE)}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.FAKE
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                }`}
+                style={gameMode === GameMode.FAKE ? { backgroundColor: '#5352ed' } : {}}
+              >
+                Fake
+              </button>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-200">
+                {gameMode === GameMode.CLASSIC && (
+                  <>O impostor sabe que é impostor e não conhece a palavra secreta. <strong>Objetivo:</strong> Descobrir o impostor ou enganar os outros.</>
+                )}
+                {gameMode === GameMode.JOKER && (
+                  <>Além dos impostores, há coringas que conhecem a palavra secreta. <strong>Objetivo:</strong> O coringa quer ser votado para fora.</>
+                )}
+                {gameMode === GameMode.FAKE && (
+                  <>O impostor recebe uma palavra diferente da mesma categoria e não sabe que é impostor. <strong>Objetivo:</strong> Descobrir o impostor ou enganar os outros.</>
+                )}
+              </p>
             </div>
           </div>
         </div>

@@ -100,6 +100,24 @@ const App: React.FC = () => {
       [availableColorIndices[i], availableColorIndices[j]] = [availableColorIndices[j], availableColorIndices[i]];
     }
     
+    // Gerar palavras fake para impostores no modo FAKE
+    const fakeWordsMap = new Map<number, string>();
+    if (gameMode === GameMode.FAKE && imposterIndices.size > 0 && category) {
+      const categoryWords = category.words.filter(w => w !== word);
+      const availableFakeWords = [...categoryWords].sort(() => Math.random() - 0.5);
+      let fakeWordIndex = 0;
+      imposterIndices.forEach(imposterIndex => {
+        if (availableFakeWords.length > 0 && fakeWordIndex < availableFakeWords.length) {
+          fakeWordsMap.set(imposterIndex, availableFakeWords[fakeWordIndex]);
+          fakeWordIndex++;
+        } else if (availableFakeWords.length > 0) {
+          // Se acabaram palavras únicas, reutiliza aleatoriamente
+          const randomFakeWord = availableFakeWords[Math.floor(Math.random() * availableFakeWords.length)];
+          fakeWordsMap.set(imposterIndex, randomFakeWord);
+        }
+      });
+    }
+    
     const newPlayers = currentNames.map((name, index) => {
       const colorIndex = availableColorIndices[index % availableColorIndices.length];
       return {
@@ -107,6 +125,7 @@ const App: React.FC = () => {
         isImposter: imposterIndices.has(index),
         isJoker: jokerIndices.has(index),
         color: getCardColors(colorIndex),
+        fakeWord: fakeWordsMap.get(index),
       };
     });
     
@@ -211,6 +230,7 @@ const App: React.FC = () => {
             players={players}
             secretWord={secretWord}
             secretWordCategory={secretWordCategory}
+            gameMode={gameConfig.gameMode}
             onGameEnd={() => {
               setIsTransitioning(true);
               setTimeout(() => {

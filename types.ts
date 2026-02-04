@@ -8,6 +8,7 @@ export enum GameState {
 export enum GameMode {
   CLASSIC = 'classic',
   JOKER = 'joker',
+  FAKE = 'fake',
 }
 
 export interface Player {
@@ -15,6 +16,7 @@ export interface Player {
   isImposter: boolean;
   isJoker: boolean;
   color: string[];
+  fakeWord?: string;
 }
 
 export interface GameConfig {
