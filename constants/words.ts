@@ -79,7 +79,7 @@ export const CATEGORIES: WordCategory[] = [
       'Leão', 'Lhama', 'Lobo', 'Macaco', 'Morcego', 'Onça', 'Ovelha',
       'Panda', 'Papagaio', 'Pássaro', 'Pato', 'Pavão', 'Pinguim', 'Polvo',
       'Porco', 'Rato', 'Raposa', 'Rinoceronte', 'Sapo', 'Tartaruga', 'Tigre',
-      'Tubarão', 'Urso', 'Vaca', 'Zebra', 'Unicórnio', 'Dragão', 'Fênix'
+      'Tubarão', 'Urso', 'Vaca', 'Zebra'
     ]
   },
   {
