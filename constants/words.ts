@@ -170,21 +170,41 @@ export const CATEGORIES: WordCategory[] = [
   }
 ];
 
-export const getAllWords = (categories: string[]): string[] => {
+export const getAllWords = (categories: string[], customCategories?: import('../types').CustomCategory[]): string[] => {
   const words: string[] = [];
   categories.forEach(categoryId => {
+    // Primeiro verifica nas categorias padrão
     const category = CATEGORIES.find(c => c.id === categoryId);
     if (category) {
       words.push(...category.words);
+    } else if (customCategories) {
+      // Depois verifica nas categorias customizadas
+      const customCategory = customCategories.find(c => c.id === categoryId);
+      if (customCategory) {
+        words.push(...customCategory.words);
+      }
     }
   });
   return words;
 };
 
-export const getCategoryForWord = (word: string): WordCategory | null => {
+export const getCategoryForWord = (word: string, customCategories?: import('../types').CustomCategory[]): WordCategory | null => {
+  // Primeiro verifica nas categorias padrão
   for (const category of CATEGORIES) {
     if (category.words.includes(word)) {
       return category;
+    }
+  }
+  // Depois verifica nas categorias customizadas
+  if (customCategories) {
+    for (const category of customCategories) {
+      if (category.words.includes(word)) {
+        return {
+          id: category.id,
+          name: category.name,
+          words: category.words
+        };
+      }
     }
   }
   return null;

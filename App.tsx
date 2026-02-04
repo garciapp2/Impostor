@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameState, Player, GameConfig, GameMode } from './types';
+import { GameState, Player, GameConfig, GameMode, CustomCategory } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { getCardColors } from './components/Card';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -9,19 +9,67 @@ import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
 import RevealScreen from './components/RevealScreen';
 
+// Funções para localStorage
+const STORAGE_KEY = 'impostor_game_config';
+const CUSTOM_CATEGORIES_KEY = 'impostor_custom_categories';
+
+const loadGameConfig = (): GameConfig | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Error loading game config:', error);
+  }
+  return null;
+};
+
+const saveGameConfig = (config: GameConfig) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  } catch (error) {
+    console.error('Error saving game config:', error);
+  }
+};
+
+const loadCustomCategories = (): CustomCategory[] => {
+  try {
+    const saved = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Error loading custom categories:', error);
+  }
+  return [];
+};
+
+const saveCustomCategories = (categories: CustomCategory[]) => {
+  try {
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
+  } catch (error) {
+    console.error('Error saving custom categories:', error);
+  }
+};
+
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.HOME);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [gameConfig, setGameConfig] = useState<GameConfig>({
-    gameMode: GameMode.CLASSIC,
-    playerCount: 3,
-    imposterMin: 1,
-    imposterMax: 1,
-    jokerMin: 0,
-    jokerMax: 0,
-    playerNames: ['Jogador 1', 'Jogador 2', 'Jogador 3'],
-    selectedCategories: ['objetos'],
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>(() => loadCustomCategories());
+  const [gameConfig, setGameConfig] = useState<GameConfig>(() => {
+    const saved = loadGameConfig();
+    return saved || {
+      gameMode: GameMode.CLASSIC,
+      playerCount: 3,
+      imposterMin: 1,
+      imposterMax: 1,
+      jokerMin: 0,
+      jokerMax: 0,
+      playerNames: ['Jogador 1', 'Jogador 2', 'Jogador 3'],
+      selectedCategories: ['objetos'],
+    };
   });
   const [secretWord, setSecretWord] = useState<string>('');
   const [secretWordCategory, setSecretWordCategory] = useState<string>('');
@@ -54,13 +102,13 @@ const App: React.FC = () => {
     jokerMax: number,
     selectedCategories: string[]
   ) => {
-    const availableWords = getAllWords(selectedCategories).filter(w => !usedWords.includes(w));
+    const availableWords = getAllWords(selectedCategories, customCategories).filter(w => !usedWords.includes(w));
     if (availableWords.length === 0) {
       setUsedWords([]); // Reset if all words are used
     }
-    const allWords = getAllWords(selectedCategories);
+    const allWords = getAllWords(selectedCategories, customCategories);
     const word = allWords[Math.floor(Math.random() * allWords.length)];
-    const category = getCategoryForWord(word);
+    const category = getCategoryForWord(word, customCategories);
     setSecretWord(word);
     setSecretWordCategory(category?.name || '');
     setUsedWords(prev => [...prev, word]);
@@ -103,7 +151,9 @@ const App: React.FC = () => {
     // Gerar palavras fake para impostores no modo FAKE
     const fakeWordsMap = new Map<number, string>();
     if (gameMode === GameMode.FAKE && imposterIndices.size > 0 && category) {
-      const categoryWords = category.words.filter(w => w !== word);
+      // Buscar todas as palavras da categoria (incluindo customizadas se necessário)
+      const allCategoryWords = category.words || [];
+      const categoryWords = allCategoryWords.filter(w => w !== word);
       const availableFakeWords = [...categoryWords].sort(() => Math.random() - 0.5);
       let fakeWordIndex = 0;
       imposterIndices.forEach(imposterIndex => {
@@ -134,7 +184,7 @@ const App: React.FC = () => {
     setFirstPlayerIndex(randomFirstPlayerIndex);
     
     setPlayers(newPlayers);
-  }, [usedWords]);
+  }, [usedWords, customCategories]);
 
   const handleNewRound = () => {
     setIsTransitioning(true);
@@ -172,7 +222,9 @@ const App: React.FC = () => {
   const handlePlayerNameChange = (index: number, name: string) => {
     const newNames = [...gameConfig.playerNames];
     newNames[index] = name;
-    setGameConfig({ ...gameConfig, playerNames: newNames });
+    const newConfig = { ...gameConfig, playerNames: newNames };
+    setGameConfig(newConfig);
+    saveGameConfig(newConfig);
   };
 
   const renderScreen = () => {
@@ -188,14 +240,17 @@ const App: React.FC = () => {
             jokerMax={gameConfig.jokerMax}
             playerNames={gameConfig.playerNames}
             selectedCategories={gameConfig.selectedCategories}
+            customCategories={customCategories}
             onGameModeChange={(mode) => {
-              setGameConfig({ ...gameConfig, gameMode: mode });
+              const newConfig = { ...gameConfig, gameMode: mode };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
             }}
             onPlayerCountChange={(count) => {
               const newNames = Array.from({ length: count }, (_, i) => 
                 gameConfig.playerNames[i] || `Jogador ${i + 1}`
               );
-              setGameConfig({ 
+              const newConfig = { 
                 ...gameConfig, 
                 playerCount: count,
                 playerNames: newNames,
@@ -203,23 +258,37 @@ const App: React.FC = () => {
                 imposterMax: Math.min(gameConfig.imposterMax, count),
                 jokerMin: Math.min(gameConfig.jokerMin, count),
                 jokerMax: Math.min(gameConfig.jokerMax, count)
-              });
+              };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
             }}
             onImposterRangeChange={(min, max) => {
-              setGameConfig({ ...gameConfig, imposterMin: min, imposterMax: max });
+              const newConfig = { ...gameConfig, imposterMin: min, imposterMax: max };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
             }}
             onJokerRangeChange={(min, max) => {
-              setGameConfig({ ...gameConfig, jokerMin: min, jokerMax: max });
+              const newConfig = { ...gameConfig, jokerMin: min, jokerMax: max };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
             }}
             onPlayerNameChange={handlePlayerNameChange}
             onCategoryToggle={(categoryId) => {
               const newCategories = gameConfig.selectedCategories.includes(categoryId)
                 ? gameConfig.selectedCategories.filter(id => id !== categoryId)
                 : [...gameConfig.selectedCategories, categoryId];
-              setGameConfig({ ...gameConfig, selectedCategories: newCategories });
+              const newConfig = { ...gameConfig, selectedCategories: newCategories };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
             }}
             onCategoriesChange={(categories) => {
-              setGameConfig({ ...gameConfig, selectedCategories: categories });
+              const newConfig = { ...gameConfig, selectedCategories: categories };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
+            }}
+            onCustomCategoriesChange={(categories) => {
+              setCustomCategories(categories);
+              saveCustomCategories(categories);
             }}
             onStartGame={handleStartGame}
           />

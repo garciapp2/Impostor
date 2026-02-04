@@ -29,3 +29,9 @@ export interface GameConfig {
   playerNames: string[];
   selectedCategories: string[];
 }
+
+export interface CustomCategory {
+  id: string;
+  name: string;
+  words: string[];
+}

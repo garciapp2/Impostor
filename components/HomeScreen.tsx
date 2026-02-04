@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { CATEGORIES } from '../constants/words';
-import { GameMode } from '../types';
+import { GameMode, CustomCategory } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface HomeScreenProps {
@@ -13,6 +13,7 @@ interface HomeScreenProps {
   jokerMax: number;
   playerNames: string[];
   selectedCategories: string[];
+  customCategories: CustomCategory[];
   onGameModeChange: (mode: GameMode) => void;
   onPlayerCountChange: (count: number) => void;
   onImposterRangeChange: (min: number, max: number) => void;
@@ -20,6 +21,7 @@ interface HomeScreenProps {
   onPlayerNameChange: (index: number, name: string) => void;
   onCategoryToggle: (categoryId: string) => void;
   onCategoriesChange: (categories: string[]) => void;
+  onCustomCategoriesChange: (categories: CustomCategory[]) => void;
   onStartGame: () => void;
 }
 
@@ -32,6 +34,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   jokerMax,
   playerNames,
   selectedCategories,
+  customCategories,
   onGameModeChange,
   onPlayerCountChange,
   onImposterRangeChange,
@@ -39,6 +42,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onPlayerNameChange,
   onCategoryToggle,
   onCategoriesChange,
+  onCustomCategoriesChange,
   onStartGame,
 }) => {
   const { isDark, toggleTheme } = useTheme();
@@ -47,8 +51,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     imposters: false,
     jokers: false,
     categories: false,
+    customCategories: false,
   });
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showCustomCategoryModal, setShowCustomCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryWords, setNewCategoryWords] = useState('');
 
   const canStart = 
     playerCount >= 3 &&
@@ -558,6 +567,114 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
         </div>
+
+        {/* Custom Categories Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+          <button
+            onClick={() => setIsExpanded({ ...isExpanded, customCategories: !isExpanded.customCategories })}
+            className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Categorias Personalizadas</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                  {customCategories.length === 0 
+                    ? 'Nenhuma categoria personalizada' 
+                    : `${customCategories.length} categoria${customCategories.length !== 1 ? 's' : ''} personalizada${customCategories.length !== 1 ? 's' : ''}`
+                  }
+                </p>
+              </div>
+            </div>
+            <svg 
+              className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded.customCategories ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {isExpanded.customCategories && (
+            <div className="px-4 pb-4 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-4 transition-colors duration-200">
+              <button
+                onClick={() => {
+                  setEditingCategory(null);
+                  setNewCategoryName('');
+                  setNewCategoryWords('');
+                  setShowCustomCategoryModal(true);
+                }}
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
+                style={{ backgroundColor: '#5352ed' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Nova Categoria</span>
+              </button>
+              
+              {customCategories.map((category) => {
+                const isSelected = selectedCategories.includes(category.id);
+                return (
+                  <div key={category.id} className="flex items-center space-x-2">
+                    <button
+                      onClick={() => onCategoryToggle(category.id)}
+                      className={`flex-1 px-3 py-2.5 rounded-xl text-left text-sm transition-all ${
+                        isSelected
+                          ? 'text-white shadow-sm'
+                          : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                      }`}
+                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{category.name}</span>
+                        <span className="text-xs opacity-75">
+                          {isSelected ? '✓ ' : ''}{category.words.length} palavras
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingCategory(category);
+                        setNewCategoryName(category.name);
+                        setNewCategoryWords(category.words.join('\n'));
+                        setShowCustomCategoryModal(true);
+                      }}
+                      className="px-3 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      title="Editar"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newCategories = customCategories.filter(c => c.id !== category.id);
+                        onCustomCategoriesChange(newCategories);
+                        // Remover da seleção se estiver selecionada
+                        if (isSelected) {
+                          const newSelected = selectedCategories.filter(id => id !== category.id);
+                          onCategoriesChange(newSelected);
+                        }
+                      }}
+                      className="px-3 py-2.5 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      title="Excluir"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Start Button */}
@@ -655,6 +772,121 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed transition-colors duration-200">
                   * Grave o caos! Compartilhe suas rodadas mais engraçadas nas redes sociais e marque seus amigos.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Category Modal */}
+      {showCustomCategoryModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowCustomCategoryModal(false)}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto transition-colors duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+                {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCustomCategoryModal(false);
+                  setEditingCategory(null);
+                  setNewCategoryName('');
+                  setNewCategoryWords('');
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Fechar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="px-6 py-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                  Nome da Categoria
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Ex: Filmes Favoritos"
+                  className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                  Palavras (uma por linha)
+                </label>
+                <textarea
+                  value={newCategoryWords}
+                  onChange={(e) => setNewCategoryWords(e.target.value)}
+                  placeholder="Palavra 1&#10;Palavra 2&#10;Palavra 3"
+                  rows={8}
+                  className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Digite uma palavra por linha. Mínimo de 3 palavras.
+                </p>
+              </div>
+              
+              <div className="flex space-x-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowCustomCategoryModal(false);
+                    setEditingCategory(null);
+                    setNewCategoryName('');
+                    setNewCategoryWords('');
+                  }}
+                  className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const words = newCategoryWords
+                      .split('\n')
+                      .map(w => w.trim())
+                      .filter(w => w.length > 0);
+                    
+                    if (newCategoryName.trim() && words.length >= 3) {
+                      if (editingCategory) {
+                        // Editar categoria existente
+                        const updated = customCategories.map(c => 
+                          c.id === editingCategory.id 
+                            ? { ...c, name: newCategoryName.trim(), words }
+                            : c
+                        );
+                        onCustomCategoriesChange(updated);
+                      } else {
+                        // Nova categoria
+                        const newCategory: CustomCategory = {
+                          id: `custom-${Date.now()}`,
+                          name: newCategoryName.trim(),
+                          words
+                        };
+                        onCustomCategoriesChange([...customCategories, newCategory]);
+                      }
+                      setShowCustomCategoryModal(false);
+                      setEditingCategory(null);
+                      setNewCategoryName('');
+                      setNewCategoryWords('');
+                    }
+                  }}
+                  disabled={!newCategoryName.trim() || newCategoryWords.split('\n').filter(w => w.trim().length > 0).length < 3}
+                  className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#5352ed' }}
+                >
+                  {editingCategory ? 'Salvar' : 'Criar'}
+                </button>
               </div>
             </div>
           </div>
