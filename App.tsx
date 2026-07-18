@@ -49,7 +49,7 @@ const loadGameConfig = (): GameConfig | null => {
       }
       // Migração: garante que configs salvas antes destas opções existirem tenham valores padrão
       return {
-        allowRepeats: false,
+        allowRepeats: true,
         showHintToImposter: false,
         hapticFeedback: true,
         showLocationRoles: true,
@@ -113,7 +113,7 @@ const App: React.FC = () => {
       jokerMax: 1,
       playerNames: ['Jogador 1', 'Jogador 2', 'Jogador 3'],
       selectedCategories: ['objetos'],
-      allowRepeats: false,
+      allowRepeats: true,
       showHintToImposter: false,
       hapticFeedback: true,
       showLocationRoles: true,
