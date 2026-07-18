@@ -85,6 +85,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     categories: false,
     customCategories: false,
     questionCategories: false,
+    customQuestions: false,
+    customLocations: false,
     options: false,
   });
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -836,18 +838,38 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* Custom Question Categories (só modo Perguntas) */}
         {isQuestions && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
-            <div className="px-4 pt-4 pb-2 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+            <button
+              onClick={() => setIsExpanded({ ...isExpanded, customQuestions: !isExpanded.customQuestions })}
+              className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Perguntas Personalizadas</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                    {customQuestionCategories.length === 0
+                      ? 'Crie suas próprias categorias de perguntas'
+                      : `${customQuestionCategories.length} categoria${customQuestionCategories.length !== 1 ? 's' : ''} personalizada${customQuestionCategories.length !== 1 ? 's' : ''}`
+                    }
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Perguntas Personalizadas</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Crie suas próprias categorias de perguntas</p>
-              </div>
-            </div>
-            <div className="px-4 pb-4 pt-2 space-y-2">
+              <svg
+                className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded.customQuestions ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isExpanded.customQuestions && (
+            <div className="px-4 pb-4 pt-4 space-y-2 border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={() => openExtraModal('question', null, '', [])}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
@@ -902,24 +924,45 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
         {/* Custom Locations (só modo Espião) */}
         {isSpy && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
-            <div className="px-4 pt-4 pb-2 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+            <button
+              onClick={() => setIsExpanded({ ...isExpanded, customLocations: !isExpanded.customLocations })}
+              className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Locais Personalizados</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                    {customLocations.length === 0
+                      ? 'Entram no sorteio junto com os locais padrão'
+                      : `${customLocations.length} local${customLocations.length !== 1 ? 'is' : ''} personalizado${customLocations.length !== 1 ? 's' : ''}`
+                    }
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Locais Personalizados</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Entram no sorteio junto com os locais padrão</p>
-              </div>
-            </div>
-            <div className="px-4 pb-4 pt-2 space-y-2">
+              <svg
+                className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded.customLocations ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isExpanded.customLocations && (
+            <div className="px-4 pb-4 pt-4 space-y-2 border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={() => openExtraModal('location', null, '', [])}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
@@ -959,6 +1002,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 

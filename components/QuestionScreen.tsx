@@ -94,27 +94,23 @@ const QuestionScreen: React.FC<QuestionScreenProps> = ({ players, question, fake
               autoFocus
               className="w-full px-4 py-3 text-base bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none"
             />
+            {/* Botão logo abaixo da caixa, pra não ficar escondido pelo teclado */}
+            <button
+              onClick={handleConfirm}
+              disabled={text.trim() === ''}
+              className={`w-full mt-3 py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all ${
+                text.trim() === '' ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' : ''
+              }`}
+              style={text.trim() !== '' ? { backgroundColor: '#5352ed' } : {}}
+            >
+              {isLastPlayer ? 'Ver Respostas' : 'Confirmar e Passar'}
+            </button>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center transition-colors duration-200">
               Responda sem entregar de cara.. o impostor tem outra pergunta!
             </p>
           </div>
         </div>
       )}
-
-      <div className="w-full max-w-sm mb-6" style={{ minHeight: '56px' }}>
-        {phase === 'answer' && (
-          <button
-            onClick={handleConfirm}
-            disabled={text.trim() === ''}
-            className={`w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all ${
-              text.trim() === '' ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' : ''
-            }`}
-            style={text.trim() !== '' ? { backgroundColor: '#5352ed' } : {}}
-          >
-            {isLastPlayer ? 'Ver Respostas' : 'Confirmar e Passar'}
-          </button>
-        )}
-      </div>
     </div>
   );
 };
