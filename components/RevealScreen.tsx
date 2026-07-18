@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { GameMode } from '../types';
+import type { QuestionAnswer } from '../types';
 
 interface RevealScreenProps {
   imposterNames: string;
@@ -12,11 +13,12 @@ interface RevealScreenProps {
   firstPlayerName: string;
   gameMode: GameMode;
   imposterFakeWords?: Array<{ name: string; word: string }>;
+  questionData?: { question: string; fakeQuestion: string; category: string; answers: QuestionAnswer[] };
   onNewRound: () => void;
   onBackToStart: () => void;
 }
 
-const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, gameMode, imposterFakeWords, onNewRound, onBackToStart }) => {
+const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, gameMode, imposterFakeWords, questionData, onNewRound, onBackToStart }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealStep, setRevealStep] = useState(0);
 
@@ -25,7 +27,13 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
   const displayText = isNone ? 'Ninguém!' : isAll ? 'Todos!' : imposterNames;
   const hasJokers = jokerCount > 0;
   const isFakeMode = gameMode === GameMode.FAKE;
+  const isSpyMode = gameMode === GameMode.SPY;
+  const isQuestions = gameMode === GameMode.QUESTIONS && !!questionData;
   const hasFakeWords = isFakeMode && imposterFakeWords && imposterFakeWords.length > 0;
+  const secretLabel = isSpyMode ? 'O local secreto era:' : 'A palavra secreta era:';
+  const cheaterLabel = isSpyMode
+    ? (imposterCount > 1 || isAll ? 'Os espiões eram:' : 'O espião era:')
+    : (imposterCount > 1 || isAll ? 'Os impostores eram:' : 'O impostor era:');
 
   const handleReveal = () => {
     setIsRevealed(true);
@@ -36,6 +44,89 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
       setTimeout(() => setRevealStep(3), 400);
     }
   };
+
+  // ----- Modo Perguntas -----
+  if (isQuestions) {
+    const qd = questionData!;
+    if (!isRevealed) {
+      return (
+        <div className="flex flex-col h-full px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+          <div className="flex-1 flex flex-col overflow-y-auto py-6">
+            <div className="my-auto w-full">
+            <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-200">Categoria: {qd.category}</p>
+            <div className="w-full max-w-sm mx-auto rounded-3xl shadow-xl p-6 mb-5 text-white" style={{ backgroundColor: '#5352ed' }}>
+              <p className="text-sm opacity-90 mb-1 text-center">A pergunta era:</p>
+              <p className="text-xl font-bold text-center leading-snug">{qd.question}</p>
+            </div>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center mb-3 transition-colors duration-200">As respostas:</p>
+            <div className="w-full max-w-sm mx-auto space-y-2">
+              {qd.answers.map((a, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-left transition-colors duration-200">
+                  <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{a.name}</p>
+                  <p className="text-base text-gray-900 dark:text-gray-100 break-words">{a.answer}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4 transition-colors duration-200">
+              Discutam, justifiquem e votem em quem acham que é o impostor.
+            </p>
+            </div>
+          </div>
+          <div className="pb-6">
+            <button
+              onClick={handleReveal}
+              className="w-full max-w-sm py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all mx-auto block"
+              style={{ backgroundColor: '#5352ed' }}
+            >
+              Revelar Impostor
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col h-full text-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4 overflow-y-auto py-4">
+          <div className={`w-full mb-2 ${revealStep >= 1 ? 'animate-fade-in' : 'opacity-0'}`}>
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 drop-shadow-sm transition-colors duration-200">Hora da Verdade!</h1>
+          </div>
+          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
+            <p className="text-lg opacity-90 mb-3">{cheaterLabel}</p>
+            <p className="text-3xl font-bold drop-shadow-lg leading-tight">{displayText}</p>
+          </div>
+          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
+            <p className="text-xs opacity-90 mb-1">A pergunta de todos era:</p>
+            <p className="text-lg font-bold drop-shadow-lg leading-snug mb-3">{qd.question}</p>
+            <div className="w-full pt-3 border-t border-white border-opacity-30">
+              <p className="text-xs opacity-90 mb-1">O impostor recebeu:</p>
+              <p className="text-lg font-bold drop-shadow-lg leading-snug">{qd.fakeQuestion}</p>
+            </div>
+          </div>
+        </div>
+        <div className={`flex flex-col space-y-3 w-full max-w-sm mx-auto pb-6 ${revealStep >= 2 ? 'animate-fade-in' : 'opacity-0'}`}>
+          <button
+            onClick={onNewRound}
+            className="w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2"
+            style={{ backgroundColor: '#5352ed' }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Nova Rodada</span>
+          </button>
+          <button
+            onClick={onBackToStart}
+            className="w-full py-4 rounded-2xl font-semibold text-gray-700 dark:text-gray-300 shadow-sm active:scale-98 transition-all bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Voltar ao Início</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isRevealed) {
     return (
@@ -81,14 +172,14 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
         </div>
         {/* Palavra Secreta */}
         <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
-          <p className="text-sm opacity-90 mb-2">A palavra secreta era:</p>
+          <p className="text-sm opacity-90 mb-2">{secretLabel}</p>
           <p className="text-3xl font-bold drop-shadow-lg leading-tight">{secretWord}</p>
         </div>
 
         {/* Impostores */}
         <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
           <p className="text-lg opacity-90 mb-3">
-            {isNone ? 'O impostor era:' : isAll ? 'Os impostores eram:' : imposterCount > 1 ? 'Os impostores eram:' : 'O impostor era:'}
+            {cheaterLabel}
           </p>
           <p className="text-3xl font-bold drop-shadow-lg leading-tight mb-3">{displayText}</p>
           

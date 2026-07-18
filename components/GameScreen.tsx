@@ -9,19 +9,29 @@ interface GameScreenProps {
   secretWord: string;
   secretWordCategory: string;
   gameMode: GameMode;
+  showHintToImposter: boolean;
+  hapticFeedback: boolean;
+  showLocationRoles: boolean;
   onGameEnd: () => void;
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWordCategory, gameMode, onGameEnd }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWordCategory, gameMode, showHintToImposter, hapticFeedback, showLocationRoles, onGameEnd }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCardHeld, setIsCardHeld] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
+  const vibrate = (pattern: number | number[]) => {
+    if (hapticFeedback && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(pattern);
+    }
+  };
+
   const handleNext = () => {
     if (isAnimating) return;
-    
+
     if (currentIndex < players.length - 1) {
+      vibrate(15);
       setIsCardHeld(false); // Reset card held state when moving to next
       setIsAnimating(true);
       setTimeout(() => {
@@ -97,6 +107,40 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
   const isLastPlayer = currentIndex === players.length - 1;
   const cardColor = currentPlayer.color;
   const progressPercentage = ((currentIndex + 1) / players.length) * 100;
+  const isSpy = gameMode === GameMode.SPY;
+
+  // Calcula o conteúdo da carta para cada jogador conforme o modo de jogo.
+  const getCardData = (player: Player) => {
+    if (isSpy) {
+      if (player.isImposter) {
+        return { backContent: 'VOCÊ É O ESPIÃO', category: '', wordLabel: undefined as string | undefined, subContent: undefined as string | undefined, isImposter: true, isFakeWord: false };
+      }
+      return {
+        backContent: secretWord, // o local secreto
+        category: '',
+        wordLabel: 'O local é',
+        subContent: showLocationRoles && player.role ? `Sua função: ${player.role}` : undefined,
+        isImposter: false,
+        isFakeWord: false,
+      };
+    }
+    const isFakeWord = gameMode === GameMode.FAKE && player.isImposter && !!player.fakeWord;
+    return {
+      backContent: player.isImposter
+        ? (isFakeWord ? player.fakeWord! : 'VOCÊ É O IMPOSTOR')
+        : secretWord,
+      category: player.isImposter
+        ? (isFakeWord ? secretWordCategory : (showHintToImposter ? secretWordCategory : ''))
+        : secretWordCategory,
+      wordLabel: undefined as string | undefined,
+      subContent: undefined as string | undefined,
+      isImposter: player.isImposter && gameMode !== GameMode.FAKE,
+      isFakeWord,
+    };
+  };
+
+  const currentCard = getCardData(currentPlayer);
+  const nextCard = currentIndex + 1 < players.length ? getCardData(players[currentIndex + 1]) : null;
 
   return (
     <div className="flex flex-col items-center justify-between h-full w-full px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
@@ -121,22 +165,18 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
           <Card
             key={`card-${currentIndex}`}
             frontContent={`Passe para ${currentPlayer.name}`}
-            backContent={
-              currentPlayer.isImposter 
-                ? (gameMode === GameMode.FAKE && currentPlayer.fakeWord ? currentPlayer.fakeWord : 'VOCÊ É O IMPOSTOR')
-                : secretWord
-            }
-            category={
-              currentPlayer.isImposter 
-                ? (gameMode === GameMode.FAKE && currentPlayer.fakeWord ? secretWordCategory : '')
-                : secretWordCategory
-            }
-            isImposter={currentPlayer.isImposter && gameMode !== GameMode.FAKE}
+            backContent={currentCard.backContent}
+            category={currentCard.category}
+            isImposter={currentCard.isImposter}
             isJoker={currentPlayer.isJoker}
-            isFakeWord={gameMode === GameMode.FAKE && currentPlayer.isImposter && !!currentPlayer.fakeWord}
+            isFakeWord={currentCard.isFakeWord}
+            showHint={showHintToImposter}
+            wordLabel={currentCard.wordLabel}
+            subContent={currentCard.subContent}
             colors={cardColor}
             onFlipped={(flipped) => {
               if (flipped) {
+                vibrate(20);
                 setIsCardHeld(true);
               }
             }}
@@ -144,27 +184,23 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
         </div>
         
         {/* Próximo card entrando pela direita */}
-        {isAnimating && currentIndex + 1 < players.length && (
+        {isAnimating && nextCard && currentIndex + 1 < players.length && (
           <div className="absolute w-full flex items-center justify-center animate-slide-in-right">
             <Card
               key={`next-${currentIndex + 1}`}
               frontContent={`Passe para ${players[currentIndex + 1].name}`}
-              backContent={
-                players[currentIndex + 1].isImposter 
-                  ? (gameMode === GameMode.FAKE && players[currentIndex + 1].fakeWord ? players[currentIndex + 1].fakeWord : 'VOCÊ É O IMPOSTOR')
-                  : secretWord
-              }
-              category={
-                players[currentIndex + 1].isImposter 
-                  ? (gameMode === GameMode.FAKE && players[currentIndex + 1].fakeWord ? secretWordCategory : '')
-                  : secretWordCategory
-              }
-              isImposter={players[currentIndex + 1].isImposter && gameMode !== GameMode.FAKE}
+              backContent={nextCard.backContent}
+              category={nextCard.category}
+              isImposter={nextCard.isImposter}
               isJoker={players[currentIndex + 1].isJoker}
-              isFakeWord={gameMode === GameMode.FAKE && players[currentIndex + 1].isImposter && !!players[currentIndex + 1].fakeWord}
+              isFakeWord={nextCard.isFakeWord}
+              showHint={showHintToImposter}
+              wordLabel={nextCard.wordLabel}
+              subContent={nextCard.subContent}
               colors={players[currentIndex + 1].color}
               onFlipped={(flipped) => {
               if (flipped) {
+                vibrate(20);
                 setIsCardHeld(true);
               }
             }}

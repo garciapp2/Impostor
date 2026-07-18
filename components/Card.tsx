@@ -38,10 +38,13 @@ interface CardProps {
   isJoker: boolean;
   colors: string[];
   isFakeWord?: boolean;
+  showHint?: boolean;
+  wordLabel?: string;
+  subContent?: string;
   onFlipped?: (flipped: boolean) => void;
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, onFlipped }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, showHint, wordLabel, subContent, onFlipped }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => {
@@ -95,16 +98,23 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
               <span className="text-xs font-medium opacity-90 text-center select-none">Categoria: {category}</span>
             )}
             {isImposter && !isFakeWord && (
-              <span className="text-xs uppercase tracking-wider opacity-90 text-center select-none">Sua Identidade</span>
+              showHint && category ? (
+                <span className="text-xs font-medium opacity-90 text-center select-none">Dica · Categoria: {category}</span>
+              ) : (
+                <span className="text-xs uppercase tracking-wider opacity-90 text-center select-none">Sua Identidade</span>
+              )
             )}
           </div>
 
           {/* Middle: Word */}
           <div className="flex flex-col items-center justify-center flex-grow">
             {(!isImposter || isFakeWord) && (
-              <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">A Palavra Secreta é</span>
+              <span className="text-xs uppercase tracking-wider opacity-90 mb-4 select-none">{wordLabel || 'A Palavra Secreta é'}</span>
             )}
             <span className="text-4xl font-bold text-center break-words leading-tight select-none">{backContent}</span>
+            {subContent && (
+              <span className="text-lg font-semibold text-center break-words leading-tight select-none mt-4 opacity-95">{subContent}</span>
+            )}
           </div>
 
           {/* Bottom: Joker message */}
