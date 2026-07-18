@@ -1,23 +1,64 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameState, Player, GameConfig, GameMode, CustomCategory } from './types';
+import { GameState, Player, GameConfig, GameMode, CustomCategory, CustomQuestionCategory, CustomLocation, QuestionAnswer } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
+import { LOCATIONS, getLocationByName } from './constants/locations';
+import { drawQuestionRound, DEFAULT_QUESTION_CATEGORY_IDS } from './constants/questions';
 import { getCardColors } from './components/Card';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
+import QuestionScreen from './components/QuestionScreen';
 import RevealScreen from './components/RevealScreen';
 
 // Funções para localStorage
 const STORAGE_KEY = 'impostor_game_config';
 const CUSTOM_CATEGORIES_KEY = 'impostor_custom_categories';
+const CUSTOM_QUESTION_CATEGORIES_KEY = 'impostor_custom_question_categories';
+const CUSTOM_LOCATIONS_KEY = 'impostor_custom_locations';
+
+const loadJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved) return JSON.parse(saved);
+  } catch (error) {
+    console.error(`Error loading ${key}:`, error);
+  }
+  return fallback;
+};
+
+const saveJson = (key: string, value: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error saving ${key}:`, error);
+  }
+};
 
 const loadGameConfig = (): GameConfig | null => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Migração: o antigo modo "Coringa" virou uma opção do modo Clássico.
+      const migrated = { ...parsed };
+      if (parsed.gameMode === 'joker') {
+        migrated.gameMode = GameMode.CLASSIC;
+        migrated.enableJokers = true;
+      }
+      // Migração: garante que configs salvas antes destas opções existirem tenham valores padrão
+      return {
+        allowRepeats: false,
+        showHintToImposter: false,
+        hapticFeedback: true,
+        showLocationRoles: true,
+        enableJokers: false,
+        jokerMin: 1,
+        jokerMax: 1,
+        selectedQuestionCategories: DEFAULT_QUESTION_CATEGORY_IDS,
+        ...migrated,
+      };
     }
   } catch (error) {
     console.error('Error loading game config:', error);
@@ -58,6 +99,8 @@ const App: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>(() => loadCustomCategories());
+  const [customQuestionCategories, setCustomQuestionCategories] = useState<CustomQuestionCategory[]>(() => loadJson<CustomQuestionCategory[]>(CUSTOM_QUESTION_CATEGORIES_KEY, []));
+  const [customLocations, setCustomLocations] = useState<CustomLocation[]>(() => loadJson<CustomLocation[]>(CUSTOM_LOCATIONS_KEY, []));
   const [gameConfig, setGameConfig] = useState<GameConfig>(() => {
     const saved = loadGameConfig();
     return saved || {
@@ -65,27 +108,41 @@ const App: React.FC = () => {
       playerCount: 3,
       imposterMin: 1,
       imposterMax: 1,
-      jokerMin: 0,
-      jokerMax: 0,
+      enableJokers: false,
+      jokerMin: 1,
+      jokerMax: 1,
       playerNames: ['Jogador 1', 'Jogador 2', 'Jogador 3'],
       selectedCategories: ['objetos'],
+      allowRepeats: false,
+      showHintToImposter: false,
+      hapticFeedback: true,
+      showLocationRoles: true,
+      selectedQuestionCategories: DEFAULT_QUESTION_CATEGORY_IDS,
     };
   });
   const [secretWord, setSecretWord] = useState<string>('');
   const [secretWordCategory, setSecretWordCategory] = useState<string>('');
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [firstPlayerIndex, setFirstPlayerIndex] = useState<number>(0);
+  // Modo Perguntas
+  const [question, setQuestion] = useState<string>('');
+  const [fakeQuestion, setFakeQuestion] = useState<string>('');
+  const [questionCategory, setQuestionCategory] = useState<string>('');
+  const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
 
   const handleStartGame = () => {
     setIsTransitioning(true);
     setupNewRound(
       gameConfig.gameMode,
-      gameConfig.playerNames, 
-      gameConfig.imposterMin, 
+      gameConfig.playerNames,
+      gameConfig.imposterMin,
       gameConfig.imposterMax,
+      gameConfig.enableJokers,
       gameConfig.jokerMin,
       gameConfig.jokerMax,
-      gameConfig.selectedCategories
+      gameConfig.selectedCategories,
+      gameConfig.allowRepeats,
+      gameConfig.selectedQuestionCategories
     );
     setTimeout(() => {
       setGameState(GameState.GAME);
@@ -98,20 +155,58 @@ const App: React.FC = () => {
     currentNames: string[],
     imposterMin: number,
     imposterMax: number,
+    enableJokers: boolean,
     jokerMin: number,
     jokerMax: number,
-    selectedCategories: string[]
+    selectedCategories: string[],
+    allowRepeats: boolean,
+    selectedQuestionCategories: string[]
   ) => {
-    const availableWords = getAllWords(selectedCategories, customCategories).filter(w => !usedWords.includes(w));
-    if (availableWords.length === 0) {
-      setUsedWords([]); // Reset if all words are used
+    const isSpy = gameMode === GameMode.SPY;
+    const isQuestions = gameMode === GameMode.QUESTIONS;
+
+    let word = '';
+    let spyLocation: ReturnType<typeof getLocationByName> = null;
+    let category: ReturnType<typeof getCategoryForWord> = null;
+
+    if (isQuestions) {
+      // Modo Perguntas: sorteia categoria + pergunta real + pergunta fake (impostor).
+      const round = drawQuestionRound(selectedQuestionCategories, customQuestionCategories);
+      setQuestion(round.question);
+      setFakeQuestion(round.fakeQuestion);
+      setQuestionCategory(round.category);
+      setAnswers([]);
+      setSecretWord('');
+      setSecretWordCategory('');
+    } else {
+      // No modo Espião o "item secreto" é um local (incluindo os personalizados); nos demais é uma palavra de categoria.
+      const allLocations = [...LOCATIONS, ...customLocations];
+      const allItems = isSpy ? allLocations.map(l => l.name) : getAllWords(selectedCategories, customCategories);
+
+      // Quando repetição está desativada, sorteia só entre os itens ainda não usados.
+      // Se todos já foram usados, o ciclo reinicia.
+      let pool = allItems;
+      let resetUsed = false;
+      if (!allowRepeats) {
+        const available = allItems.filter(w => !usedWords.includes(w));
+        if (available.length > 0) {
+          pool = available;
+        } else {
+          resetUsed = true; // todos usados: reinicia o ciclo neste sorteio
+        }
+      }
+
+      word = pool[Math.floor(Math.random() * pool.length)];
+      spyLocation = isSpy ? (allLocations.find(l => l.name === word) || null) : null;
+      category = isSpy ? null : getCategoryForWord(word, customCategories);
+      setSecretWord(word);
+      setSecretWordCategory(isSpy ? 'Local' : (category?.name || ''));
+      if (allowRepeats) {
+        setUsedWords([]);
+      } else {
+        setUsedWords(prev => (resetUsed ? [word] : [...prev, word]));
+      }
     }
-    const allWords = getAllWords(selectedCategories, customCategories);
-    const word = allWords[Math.floor(Math.random() * allWords.length)];
-    const category = getCategoryForWord(word, customCategories);
-    setSecretWord(word);
-    setSecretWordCategory(category?.name || '');
-    setUsedWords(prev => [...prev, word]);
 
     // Select random number of imposters within range
     const imposterCount = Math.floor(Math.random() * (imposterMax - imposterMin + 1)) + imposterMin;
@@ -125,9 +220,9 @@ const App: React.FC = () => {
       }
     }
 
-    // Select random jokers within range (only in JOKER mode)
+    // Select random jokers within range (Coringa option, only in Clássico)
     const jokerIndices = new Set<number>();
-    if (gameMode === GameMode.JOKER) {
+    if (gameMode === GameMode.CLASSIC && enableJokers) {
       const jokerCount = Math.floor(Math.random() * (jokerMax - jokerMin + 1)) + jokerMin;
       if (jokerCount > 0) {
         // Make sure jokers don't overlap with imposters
@@ -168,6 +263,19 @@ const App: React.FC = () => {
       });
     }
     
+    // Atribuir funções do local aos não-espiões (modo Espião)
+    const roleMap = new Map<number, string>();
+    if (isSpy && spyLocation && spyLocation.roles.length > 0) {
+      const shuffledRoles = [...spyLocation.roles].sort(() => Math.random() - 0.5);
+      let roleIndex = 0;
+      currentNames.forEach((_, index) => {
+        if (!imposterIndices.has(index)) {
+          roleMap.set(index, shuffledRoles[roleIndex % shuffledRoles.length]);
+          roleIndex++;
+        }
+      });
+    }
+
     const newPlayers = currentNames.map((name, index) => {
       const colorIndex = availableColorIndices[index % availableColorIndices.length];
       return {
@@ -176,6 +284,7 @@ const App: React.FC = () => {
         isJoker: jokerIndices.has(index),
         color: getCardColors(colorIndex),
         fakeWord: fakeWordsMap.get(index),
+        role: roleMap.get(index),
       };
     });
     
@@ -184,7 +293,7 @@ const App: React.FC = () => {
     setFirstPlayerIndex(randomFirstPlayerIndex);
     
     setPlayers(newPlayers);
-  }, [usedWords, customCategories]);
+  }, [usedWords, customCategories, customQuestionCategories, customLocations]);
 
   const handleNewRound = () => {
     setIsTransitioning(true);
@@ -196,9 +305,12 @@ const App: React.FC = () => {
         gameConfig.playerNames,
         gameConfig.imposterMin,
         gameConfig.imposterMax,
+        gameConfig.enableJokers,
         gameConfig.jokerMin,
         gameConfig.jokerMax,
-        gameConfig.selectedCategories
+        gameConfig.selectedCategories,
+        gameConfig.allowRepeats,
+        gameConfig.selectedQuestionCategories
       );
       // Mudar para a tela de cards
       setGameState(GameState.GAME);
@@ -236,11 +348,21 @@ const App: React.FC = () => {
             playerCount={gameConfig.playerCount}
             imposterMin={gameConfig.imposterMin}
             imposterMax={gameConfig.imposterMax}
+            enableJokers={gameConfig.enableJokers}
             jokerMin={gameConfig.jokerMin}
             jokerMax={gameConfig.jokerMax}
             playerNames={gameConfig.playerNames}
             selectedCategories={gameConfig.selectedCategories}
             customCategories={customCategories}
+            allowRepeats={gameConfig.allowRepeats}
+            showHintToImposter={gameConfig.showHintToImposter}
+            hapticFeedback={gameConfig.hapticFeedback}
+            showLocationRoles={gameConfig.showLocationRoles}
+            onOptionChange={(key, value) => {
+              const newConfig = { ...gameConfig, [key]: value };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
+            }}
             onGameModeChange={(mode) => {
               const newConfig = { ...gameConfig, gameMode: mode };
               setGameConfig(newConfig);
@@ -290,16 +412,54 @@ const App: React.FC = () => {
               setCustomCategories(categories);
               saveCustomCategories(categories);
             }}
+            selectedQuestionCategories={gameConfig.selectedQuestionCategories}
+            onQuestionCategoriesChange={(categories) => {
+              const newConfig = { ...gameConfig, selectedQuestionCategories: categories };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
+            }}
+            customQuestionCategories={customQuestionCategories}
+            onCustomQuestionCategoriesChange={(cats) => {
+              setCustomQuestionCategories(cats);
+              saveJson(CUSTOM_QUESTION_CATEGORIES_KEY, cats);
+            }}
+            customLocations={customLocations}
+            onCustomLocationsChange={(locs) => {
+              setCustomLocations(locs);
+              saveJson(CUSTOM_LOCATIONS_KEY, locs);
+            }}
             onStartGame={handleStartGame}
           />
         );
       case GameState.GAME:
+        if (gameConfig.gameMode === GameMode.QUESTIONS) {
+          return (
+            <QuestionScreen
+              players={players}
+              question={question}
+              fakeQuestion={fakeQuestion}
+              category={questionCategory}
+              hapticFeedback={gameConfig.hapticFeedback}
+              onGameEnd={(collected) => {
+                setAnswers(collected);
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  setGameState(GameState.REVEAL);
+                  setTimeout(() => setIsTransitioning(false), 10);
+                }, 200);
+              }}
+            />
+          );
+        }
         return (
           <GameScreen
             players={players}
             secretWord={secretWord}
             secretWordCategory={secretWordCategory}
             gameMode={gameConfig.gameMode}
+            showHintToImposter={gameConfig.showHintToImposter}
+            hapticFeedback={gameConfig.hapticFeedback}
+            showLocationRoles={gameConfig.showLocationRoles}
             onGameEnd={() => {
               setIsTransitioning(true);
               setTimeout(() => {
@@ -315,13 +475,16 @@ const App: React.FC = () => {
         const jokers = players.filter(p => p.isJoker);
         const jokerNames = jokers.map(p => p.name).join(', ');
         const firstPlayer = players.length > 0 && firstPlayerIndex < players.length ? players[firstPlayerIndex].name : '';
-        const imposterFakeWords = gameConfig.gameMode === GameMode.FAKE 
+        const imposterFakeWords = gameConfig.gameMode === GameMode.FAKE
           ? imposters
               .filter(p => p.fakeWord)
               .map(p => ({ name: p.name, word: p.fakeWord! }))
           : undefined;
+        const questionData = gameConfig.gameMode === GameMode.QUESTIONS
+          ? { question, fakeQuestion, category: questionCategory, answers }
+          : undefined;
         return (
-          <RevealScreen 
+          <RevealScreen
             imposterNames={imposterNames}
             imposterCount={imposters.length}
             jokerNames={jokerNames}
@@ -331,6 +494,7 @@ const App: React.FC = () => {
             firstPlayerName={firstPlayer}
             gameMode={gameConfig.gameMode}
             imposterFakeWords={imposterFakeWords}
+            questionData={questionData}
             onNewRound={handleNewRound}
             onBackToStart={handleBackToStart}
           />

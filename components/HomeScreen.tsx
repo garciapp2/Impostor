@@ -1,19 +1,33 @@
 
 import React, { useState } from 'react';
 import { CATEGORIES } from '../constants/words';
-import { GameMode, CustomCategory } from '../types';
+import { QUESTION_CATEGORIES } from '../constants/questions';
+import { GameMode, CustomCategory, CustomQuestionCategory, CustomLocation } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import Logo from './Logo';
 
 interface HomeScreenProps {
   gameMode: GameMode;
   playerCount: number;
   imposterMin: number;
   imposterMax: number;
+  enableJokers: boolean;
   jokerMin: number;
   jokerMax: number;
   playerNames: string[];
   selectedCategories: string[];
   customCategories: CustomCategory[];
+  allowRepeats: boolean;
+  showHintToImposter: boolean;
+  hapticFeedback: boolean;
+  showLocationRoles: boolean;
+  selectedQuestionCategories: string[];
+  onQuestionCategoriesChange: (categories: string[]) => void;
+  customQuestionCategories: CustomQuestionCategory[];
+  onCustomQuestionCategoriesChange: (cats: CustomQuestionCategory[]) => void;
+  customLocations: CustomLocation[];
+  onCustomLocationsChange: (locs: CustomLocation[]) => void;
+  onOptionChange: (key: 'allowRepeats' | 'showHintToImposter' | 'hapticFeedback' | 'showLocationRoles' | 'enableJokers', value: boolean) => void;
   onGameModeChange: (mode: GameMode) => void;
   onPlayerCountChange: (count: number) => void;
   onImposterRangeChange: (min: number, max: number) => void;
@@ -30,11 +44,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   playerCount,
   imposterMin,
   imposterMax,
+  enableJokers,
   jokerMin,
   jokerMax,
   playerNames,
   selectedCategories,
   customCategories,
+  allowRepeats,
+  showHintToImposter,
+  hapticFeedback,
+  showLocationRoles,
+  selectedQuestionCategories,
+  onQuestionCategoriesChange,
+  customQuestionCategories,
+  onCustomQuestionCategoriesChange,
+  customLocations,
+  onCustomLocationsChange,
+  onOptionChange,
   onGameModeChange,
   onPlayerCountChange,
   onImposterRangeChange,
@@ -46,26 +72,54 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onStartGame,
 }) => {
   const { isDark, toggleTheme } = useTheme();
+  const isSpy = gameMode === GameMode.SPY;
+  const isQuestions = gameMode === GameMode.QUESTIONS;
+  // Coringa é uma opção do modo Clássico (desativada por padrão).
+  const jokersActive = gameMode === GameMode.CLASSIC && enableJokers;
+  // Espião e Perguntas usam suas próprias listas (locais/perguntas), não as categorias de palavras.
+  const hideWordCategories = isSpy || isQuestions;
   const [isExpanded, setIsExpanded] = useState({
     players: true,
     imposters: false,
     jokers: false,
     categories: false,
     customCategories: false,
+    questionCategories: false,
+    options: false,
   });
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showCustomCategoryModal, setShowCustomCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryWords, setNewCategoryWords] = useState('');
+  // Modal compartilhado para personalizações de Perguntas e Espião (mesma forma: nome + lista de linhas).
+  const [showExtraModal, setShowExtraModal] = useState(false);
+  const [extraKind, setExtraKind] = useState<'question' | 'location'>('question');
+  const [editingExtraId, setEditingExtraId] = useState<string | null>(null);
+  const [extraName, setExtraName] = useState('');
+  const [extraItems, setExtraItems] = useState('');
+
+  const openExtraModal = (kind: 'question' | 'location', id: string | null, name: string, items: string[]) => {
+    setExtraKind(kind);
+    setEditingExtraId(id);
+    setExtraName(name);
+    setExtraItems(items.join('\n'));
+    setShowExtraModal(true);
+  };
+  const closeExtraModal = () => {
+    setShowExtraModal(false);
+    setEditingExtraId(null);
+    setExtraName('');
+    setExtraItems('');
+  };
 
   const canStart = 
     playerCount >= 3 &&
     imposterMin >= 0 &&
     imposterMax <= playerCount &&
     imposterMin <= imposterMax &&
-    (gameMode === GameMode.CLASSIC || gameMode === GameMode.FAKE || (gameMode === GameMode.JOKER && jokerMin >= 0 && jokerMax <= playerCount && jokerMin <= jokerMax)) &&
-    selectedCategories.length > 0 &&
+    (!jokersActive || (jokerMin >= 0 && jokerMax <= playerCount && jokerMin <= jokerMax)) &&
+    (isSpy || (isQuestions ? selectedQuestionCategories.length > 0 : selectedCategories.length > 0)) &&
     playerNames.every(name => name.trim() !== '');
 
   return (
@@ -108,9 +162,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
       {/* Header */}
       <div className="pt-16 pb-2 px-4 text-center">
-        <h1 className="text-6xl font-extrabold mb-12 tracking-tight" style={{ color: '#5352ed', fontFamily: "'Poppins', sans-serif" }}>
-          Impostor
-        </h1>
+        <div className="mt-4 mb-6 flex justify-center">
+          <Logo className="w-[80%] max-w-[340px]" />
+        </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 transition-colors duration-200">Configure e comece a jogar</p>
       </div>
 
@@ -129,10 +183,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Modo de Jogo</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => onGameModeChange(GameMode.CLASSIC)}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                   gameMode === GameMode.CLASSIC
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
@@ -142,19 +196,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 Clássico
               </button>
               <button
-                onClick={() => onGameModeChange(GameMode.JOKER)}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  gameMode === GameMode.JOKER
-                    ? 'text-white shadow-sm'
-                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
-                }`}
-                style={gameMode === GameMode.JOKER ? { backgroundColor: '#5352ed' } : {}}
-              >
-                Coringa
-              </button>
-              <button
                 onClick={() => onGameModeChange(GameMode.FAKE)}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                   gameMode === GameMode.FAKE
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
@@ -163,17 +206,42 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               >
                 Cegas
               </button>
+              <button
+                onClick={() => onGameModeChange(GameMode.SPY)}
+                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.SPY
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                }`}
+                style={gameMode === GameMode.SPY ? { backgroundColor: '#5352ed' } : {}}
+              >
+                Espião
+              </button>
+              <button
+                onClick={() => onGameModeChange(GameMode.QUESTIONS)}
+                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.QUESTIONS
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                }`}
+                style={gameMode === GameMode.QUESTIONS ? { backgroundColor: '#5352ed' } : {}}
+              >
+                Perguntas
+              </button>
             </div>
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-200">
                 {gameMode === GameMode.CLASSIC && (
                   <>O impostor sabe que é impostor e não conhece a palavra secreta. <strong>Objetivo:</strong> Descobrir o impostor ou enganar os outros.</>
                 )}
-                {gameMode === GameMode.JOKER && (
-                  <>Além dos impostores, há coringas que conhecem a palavra secreta. <strong>Objetivo:</strong> O coringa quer ser votado para fora.</>
-                )}
                 {gameMode === GameMode.FAKE && (
                   <>O impostor recebe uma palavra diferente da mesma categoria e não sabe que é impostor. <strong>Objetivo:</strong> Descobrir o impostor ou enganar os outros.</>
+                )}
+                {gameMode === GameMode.SPY && (
+                  <>Todos veem um <strong>local secreto</strong> (e podem ter uma função nele), menos o espião. <strong>Objetivo:</strong> Achar o espião; o espião tenta descobrir o local sem se entregar.</>
+                )}
+                {gameMode === GameMode.QUESTIONS && (
+                  <>Cada um responde uma pergunta no celular. O impostor recebe <strong>outra pergunta da mesma categoria</strong>. No fim, as respostas aparecem e vocês apontam o impostor.</>
                 )}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 italic transition-colors duration-200">
@@ -268,11 +336,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Impostores</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">{isSpy ? 'Espiões' : 'Impostores'}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
-                  {imposterMin === imposterMax 
-                    ? `${imposterMin} impostor${imposterMin !== 1 ? 'es' : ''}`
-                    : `${imposterMin}-${imposterMax} impostores`
+                  {isSpy
+                    ? (imposterMin === imposterMax
+                        ? `${imposterMin} espi${imposterMin !== 1 ? 'ões' : 'ão'}`
+                        : `${imposterMin}-${imposterMax} espiões`)
+                    : (imposterMin === imposterMax
+                        ? `${imposterMin} impostor${imposterMin !== 1 ? 'es' : ''}`
+                        : `${imposterMin}-${imposterMax} impostores`)
                   }
                 </p>
               </div>
@@ -370,15 +442,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
         </div>
 
-        {/* Joker Range Section - Only visible in JOKER mode */}
-        {gameMode === GameMode.JOKER && (
+        {/* Joker Range Section - Only visible when the Coringa option is enabled */}
+        {jokersActive && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
             <button
               onClick={() => setIsExpanded({ ...isExpanded, jokers: !isExpanded.jokers })}
               className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -488,7 +560,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         )}
 
         {/* Categories Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+        <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200 ${hideWordCategories ? 'hidden' : ''}`}>
           <button
             onClick={() => setIsExpanded({ ...isExpanded, categories: !isExpanded.categories })}
             className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
@@ -571,7 +643,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
 
         {/* Custom Categories Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+        <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200 ${hideWordCategories ? 'hidden' : ''}`}>
           <button
             onClick={() => setIsExpanded({ ...isExpanded, customCategories: !isExpanded.customCategories })}
             className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
@@ -677,6 +749,349 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
         </div>
+
+        {/* Question Categories Section (só modo Perguntas) */}
+        {isQuestions && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <button
+              onClick={() => setIsExpanded({ ...isExpanded, questionCategories: !isExpanded.questionCategories })}
+              className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Categorias das Perguntas</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                    {selectedQuestionCategories.length === 0
+                      ? 'Nenhuma selecionada'
+                      : `${selectedQuestionCategories.length} categoria${selectedQuestionCategories.length !== 1 ? 's' : ''} selecionada${selectedQuestionCategories.length !== 1 ? 's' : ''}`
+                    }
+                  </p>
+                </div>
+              </div>
+              <svg
+                className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded.questionCategories ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isExpanded.questionCategories && (
+              <div className="px-4 pb-4 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-4 transition-colors duration-200">
+                <div className="flex justify-start mb-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const allSelected = QUESTION_CATEGORIES.every(cat => selectedQuestionCategories.includes(cat.id));
+                      onQuestionCategoriesChange(allSelected ? [] : QUESTION_CATEGORIES.map(cat => cat.id));
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all active:scale-95"
+                    style={{
+                      backgroundColor: QUESTION_CATEGORIES.every(cat => selectedQuestionCategories.includes(cat.id)) ? '#ef4444' : '#5352ed',
+                      color: 'white'
+                    }}
+                  >
+                    {QUESTION_CATEGORIES.every(cat => selectedQuestionCategories.includes(cat.id)) ? 'Deselecionar todas' : 'Selecionar todas'}
+                  </button>
+                </div>
+                {QUESTION_CATEGORIES.map((category) => {
+                  const isSelected = selectedQuestionCategories.includes(category.id);
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        const next = isSelected
+                          ? selectedQuestionCategories.filter(id => id !== category.id)
+                          : [...selectedQuestionCategories, category.id];
+                        onQuestionCategoriesChange(next);
+                      }}
+                      className={`w-full px-3 py-2.5 rounded-xl text-left text-sm transition-all ${
+                        isSelected
+                          ? 'text-white shadow-sm'
+                          : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                      }`}
+                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{category.name}</span>
+                        <span className="text-xs opacity-75">
+                          {isSelected ? '✓ ' : ''}{category.questions.length} perguntas
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Custom Question Categories (só modo Perguntas) */}
+        {isQuestions && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <div className="px-4 pt-4 pb-2 flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Perguntas Personalizadas</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Crie suas próprias categorias de perguntas</p>
+              </div>
+            </div>
+            <div className="px-4 pb-4 pt-2 space-y-2">
+              <button
+                onClick={() => openExtraModal('question', null, '', [])}
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
+                style={{ backgroundColor: '#5352ed' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Nova Categoria</span>
+              </button>
+              {customQuestionCategories.map((cat) => {
+                const isSelected = selectedQuestionCategories.includes(cat.id);
+                return (
+                  <div key={cat.id} className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        const next = isSelected
+                          ? selectedQuestionCategories.filter(id => id !== cat.id)
+                          : [...selectedQuestionCategories, cat.id];
+                        onQuestionCategoriesChange(next);
+                      }}
+                      className={`flex-1 px-3 py-2.5 rounded-xl text-left text-sm transition-all ${isSelected ? 'text-white shadow-sm' : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'}`}
+                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{cat.name}</span>
+                        <span className="text-xs opacity-75">{isSelected ? '✓ ' : ''}{cat.questions.length} perguntas</span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => openExtraModal('question', cat.id, cat.name, cat.questions)}
+                      className="px-3 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      title="Editar"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onCustomQuestionCategoriesChange(customQuestionCategories.filter(c => c.id !== cat.id));
+                        if (isSelected) onQuestionCategoriesChange(selectedQuestionCategories.filter(id => id !== cat.id));
+                      }}
+                      className="px-3 py-2.5 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      title="Excluir"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Custom Locations (só modo Espião) */}
+        {isSpy && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <div className="px-4 pt-4 pb-2 flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Locais Personalizados</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Entram no sorteio junto com os locais padrão</p>
+              </div>
+            </div>
+            <div className="px-4 pb-4 pt-2 space-y-2">
+              <button
+                onClick={() => openExtraModal('location', null, '', [])}
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
+                style={{ backgroundColor: '#5352ed' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Novo Local</span>
+              </button>
+              {customLocations.map((loc) => (
+                <div key={loc.id} className="flex items-center space-x-2">
+                  <div className="flex-1 px-3 py-2.5 rounded-xl text-left text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{loc.name}</span>
+                      <span className="text-xs opacity-75">{loc.roles.length} funções</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => openExtraModal('location', loc.id, loc.name, loc.roles)}
+                    className="px-3 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    title="Editar"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => onCustomLocationsChange(customLocations.filter(l => l.id !== loc.id))}
+                    className="px-3 py-2.5 rounded-xl text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                    title="Excluir"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Options Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+          <button
+            onClick={() => setIsExpanded({ ...isExpanded, options: !isExpanded.options })}
+            className="w-full px-4 py-4 flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700 transition-colors"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Opções</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Repetição, dicas e vibração</p>
+              </div>
+            </div>
+            <svg
+              className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded.options ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isExpanded.options && (
+            <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-2 transition-colors duration-200">
+              {/* Permitir repetição (não se aplica ao modo Perguntas) */}
+              {!isQuestions && (
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex-1 pr-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">{isSpy ? 'Permitir locais repetidos' : 'Permitir palavras repetidas'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Se desligado, evita repetir {isSpy ? 'locais' : 'palavras'} até esgotar as opções.</p>
+                  </div>
+                  <button
+                    onClick={() => onOptionChange('allowRepeats', !allowRepeats)}
+                    className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${allowRepeats ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={allowRepeats ? { backgroundColor: '#5352ed' } : {}}
+                    role="switch"
+                    aria-checked={allowRepeats}
+                    aria-label="Permitir repetição"
+                  >
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${allowRepeats ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+
+              {/* Dica para o impostor (só Clássico) */}
+              {gameMode === GameMode.CLASSIC && (
+                <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex-1 pr-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Mostrar dica ao impostor</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">O impostor vê a categoria da palavra secreta como dica.</p>
+                  </div>
+                  <button
+                    onClick={() => onOptionChange('showHintToImposter', !showHintToImposter)}
+                    className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${showHintToImposter ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={showHintToImposter ? { backgroundColor: '#5352ed' } : {}}
+                    role="switch"
+                    aria-checked={showHintToImposter}
+                    aria-label="Mostrar dica ao impostor"
+                  >
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${showHintToImposter ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+
+              {/* Feedback tátil */}
+              <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex-1 pr-3">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Vibração (feedback tátil)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Vibra ao revelar a carta e ao passar o celular.</p>
+                </div>
+                <button
+                  onClick={() => onOptionChange('hapticFeedback', !hapticFeedback)}
+                  className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${hapticFeedback ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  style={hapticFeedback ? { backgroundColor: '#5352ed' } : {}}
+                  role="switch"
+                  aria-checked={hapticFeedback}
+                  aria-label="Vibração"
+                >
+                  <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${hapticFeedback ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Coringa (só modo Clássico) */}
+              {gameMode === GameMode.CLASSIC && (
+                <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex-1 pr-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Coringa</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Adiciona coringas que conhecem a palavra secreta e querem ser votados para fora.</p>
+                  </div>
+                  <button
+                    onClick={() => onOptionChange('enableJokers', !enableJokers)}
+                    className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${enableJokers ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={enableJokers ? { backgroundColor: '#5352ed' } : {}}
+                    role="switch"
+                    aria-checked={enableJokers}
+                    aria-label="Ativar coringa"
+                  >
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${enableJokers ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+
+              {/* Funções no local (só modo Espião) */}
+              {isSpy && (
+                <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex-1 pr-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Mostrar função no local</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Cada jogador recebe um papel no local (ex: turista, garçom).</p>
+                  </div>
+                  <button
+                    onClick={() => onOptionChange('showLocationRoles', !showLocationRoles)}
+                    className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${showLocationRoles ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={showLocationRoles ? { backgroundColor: '#5352ed' } : {}}
+                    role="switch"
+                    aria-checked={showLocationRoles}
+                    aria-label="Mostrar função no local"
+                  >
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${showLocationRoles ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Start Button - Fixed */}
@@ -694,8 +1109,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           {!canStart && selectedCategories.length === 0 && 'Selecione pelo menos uma categoria'}
           {!canStart && selectedCategories.length > 0 && imposterMax > playerCount && 'Muitos impostores'}
           {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin > imposterMax && 'Range inválido'}
-          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && gameMode === GameMode.JOKER && (jokerMax > playerCount || jokerMin > jokerMax) && 'Range de coringas inválido'}
-          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && (gameMode === GameMode.CLASSIC || (jokerMax <= playerCount && jokerMin <= jokerMax)) && playerNames.some(n => !n.trim()) && 'Preencha todos os nomes'}
+          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && jokersActive && (jokerMax > playerCount || jokerMin > jokerMax) && 'Range de coringas inválido'}
+          {!canStart && selectedCategories.length > 0 && imposterMax <= playerCount && imposterMin <= imposterMax && (!jokersActive || (jokerMax <= playerCount && jokerMin <= jokerMax)) && playerNames.some(n => !n.trim()) && 'Preencha todos os nomes'}
           {canStart && 'Começar Jogo'}
         </button>
       </div>
@@ -733,40 +1148,75 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <div className="flex items-start space-x-3">
                   <span className="text-red-500 font-bold text-lg flex-shrink-0">2.</span>
                   <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
-                    Cada jogador desliza para ver a palavra secreta — exceto {gameMode === GameMode.FAKE ? 'os impostores, que verão uma palavra diferente' : 'os impostores, que verão "VOCÊ É O IMPOSTOR"'}.
-                  </p>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <span className="text-red-500 font-bold text-lg flex-shrink-0">3.</span>
-                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Um por um, os jogadores dizem uma palavra relacionada à palavra secreta.</p>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <span className="text-red-500 font-bold text-lg flex-shrink-0">4.</span>
-                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
-                    {gameMode === GameMode.FAKE 
-                      ? 'O Impostor deve tentar se misturar sem saber que é impostor.'
-                      : 'O Impostor deve fingir e tentar se misturar sem saber a palavra.'
+                    {isQuestions
+                      ? 'Cada jogador vê uma pergunta, digita a resposta no celular e passa adiante. O impostor recebe outra pergunta da mesma categoria.'
+                      : isSpy
+                      ? 'Cada jogador desliza para ver o local secreto (e sua função nele) — exceto o espião, que verá "VOCÊ É O ESPIÃO".'
+                      : <>Cada jogador desliza para ver a palavra secreta — exceto {gameMode === GameMode.FAKE ? 'os impostores, que verão uma palavra diferente' : 'os impostores, que verão "VOCÊ É O IMPOSTOR"'}.</>
                     }
                   </p>
                 </div>
-                
-                {gameMode === GameMode.JOKER && (
+
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">3.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                    {isQuestions
+                      ? 'Quando todos responderem, a pergunta e todas as respostas aparecem na tela.'
+                      : isSpy
+                      ? <>Diferente dos outros modos, aqui é um <strong>interrogatório</strong>: alguém escolhe uma pessoa e faz uma pergunta livre sobre o local (ex: "o que você costuma fazer aqui?"). Quem responde faz a próxima pergunta a outra pessoa, e assim por diante.</>
+                      : 'Um por um, os jogadores dizem uma palavra relacionada à palavra secreta.'
+                    }
+                  </p>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">4.</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                    {isQuestions
+                      ? 'Como o impostor respondeu outra pergunta, a resposta dele tende a destoar. Todos se justificam e apontam quem acham que é o impostor.'
+                      : isSpy
+                      ? 'Responda de um jeito que prove que você conhece o local, mas sem ser óbvio demais — se entregar o local de bandeja, o espião descobre na hora.'
+                      : gameMode === GameMode.FAKE
+                        ? 'O Impostor deve tentar se misturar sem saber que é impostor.'
+                        : 'O Impostor deve fingir e tentar se misturar sem saber a palavra.'
+                    }
+                  </p>
+                </div>
+
+                {isSpy && (
+                  <div className="flex items-start space-x-3">
+                    <span className="text-red-500 font-bold text-lg flex-shrink-0">5.</span>
+                    <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">O Espião não sabe onde está: ele blefa nas respostas e tenta descobrir o local pelas perguntas — sem ser desmascarado.</p>
+                  </div>
+                )}
+
+                {jokersActive && (
                   <div className="flex items-start space-x-3">
                     <span className="text-red-500 font-bold text-lg flex-shrink-0">5.</span>
                     <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">O Coringa conhece a palavra secreta e quer ser votado para fora.</p>
                   </div>
                 )}
-                
+
+                {!isQuestions && (
+                  <div className="flex items-start space-x-3">
+                    <span className="text-red-500 font-bold text-lg flex-shrink-0">{(jokersActive || isSpy) ? '6.' : '5.'}</span>
+                    <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                      {isSpy
+                        ? 'Continuem no vai e vem de perguntas e respostas até alguém achar que sacou o espião.'
+                        : 'Continuem dando dicas e conversando até alguém achar que descobriu.'
+                      }
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-start space-x-3">
-                  <span className="text-red-500 font-bold text-lg flex-shrink-0">{gameMode === GameMode.JOKER ? '6.' : '5.'}</span>
-                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Continuem dando dicas e conversando até alguém achar que descobriu.</p>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <span className="text-red-500 font-bold text-lg flex-shrink-0">{gameMode === GameMode.JOKER ? '7.' : '6.'}</span>
-                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">Quando estiverem prontos, votem em quem acham que é o Impostor — depois revelem a verdade!</p>
+                  <span className="text-red-500 font-bold text-lg flex-shrink-0">{isQuestions ? '5.' : (jokersActive || isSpy) ? '7.' : '6.'}</span>
+                  <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
+                    {isSpy
+                      ? 'Quando estiverem prontos, votem em quem acham que é o Espião — depois revelem a verdade!'
+                      : 'Quando estiverem prontos, votem em quem acham que é o Impostor — depois revelem a verdade!'
+                    }
+                  </p>
                 </div>
               </div>
               
@@ -894,6 +1344,89 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* Shared modal: custom question categories / custom locations */}
+      {showExtraModal && (() => {
+        const isQ = extraKind === 'question';
+        const minItems = isQ ? 3 : 2;
+        const itemsArr = extraItems.split('\n').map(s => s.trim()).filter(Boolean);
+        const valid = extraName.trim().length > 0 && itemsArr.length >= minItems;
+        const save = () => {
+          if (!valid) return;
+          const name = extraName.trim();
+          if (isQ) {
+            if (editingExtraId) {
+              onCustomQuestionCategoriesChange(customQuestionCategories.map(c => c.id === editingExtraId ? { ...c, name, questions: itemsArr } : c));
+            } else {
+              const id = `cq-${Date.now()}`;
+              onCustomQuestionCategoriesChange([...customQuestionCategories, { id, name, questions: itemsArr }]);
+              onQuestionCategoriesChange([...selectedQuestionCategories, id]);
+            }
+          } else {
+            if (editingExtraId) {
+              onCustomLocationsChange(customLocations.map(l => l.id === editingExtraId ? { ...l, name, roles: itemsArr } : l));
+            } else {
+              onCustomLocationsChange([...customLocations, { id: `cl-${Date.now()}`, name, roles: itemsArr }]);
+            }
+          }
+          closeExtraModal();
+        };
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={closeExtraModal}>
+            <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto transition-colors duration-200" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+                  {editingExtraId ? (isQ ? 'Editar Categoria' : 'Editar Local') : (isQ ? 'Nova Categoria' : 'Novo Local')}
+                </h2>
+                <button onClick={closeExtraModal} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Fechar">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="px-6 py-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                    {isQ ? 'Nome da categoria' : 'Nome do local'}
+                  </label>
+                  <input
+                    type="text"
+                    value={extraName}
+                    onChange={(e) => setExtraName(e.target.value)}
+                    placeholder={isQ ? 'Ex: Perguntas do rolê' : 'Ex: Escritório da firma'}
+                    className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                    {isQ ? 'Perguntas (uma por linha)' : 'Funções no local (uma por linha)'}
+                  </label>
+                  <textarea
+                    value={extraItems}
+                    onChange={(e) => setExtraItems(e.target.value)}
+                    placeholder={isQ ? 'Pergunta 1\nPergunta 2\nPergunta 3' : 'Chefe\nEstagiário\nFaxineiro'}
+                    rows={8}
+                    className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {isQ
+                      ? 'Uma pergunta por linha. Dica: todas devem pedir o mesmo tipo de resposta. Mínimo de 3.'
+                      : 'Uma função por linha (o nome do local é o título acima). Mínimo de 2.'}
+                  </p>
+                </div>
+                <div className="flex space-x-3 pt-2">
+                  <button onClick={closeExtraModal} className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                  </button>
+                  <button onClick={save} disabled={!valid} className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: '#5352ed' }}>
+                    {editingExtraId ? 'Salvar' : 'Criar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
