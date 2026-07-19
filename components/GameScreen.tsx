@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Player } from '../types';
 import { GameMode } from '../types';
 import Card from './Card';
+import HapticButton from './HapticButton';
 
 interface GameScreenProps {
   players: Player[];
@@ -154,7 +155,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 transition-colors duration-200">
           <div 
             className="h-1.5 rounded-full transition-all duration-300 ease-out" 
-            style={{width: `${progressPercentage}%`, backgroundColor: '#5352ed'}}
+            style={{width: `${progressPercentage}%`, backgroundColor: 'var(--accent)'}}
           ></div>
         </div>
       </div>
@@ -174,6 +175,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
             wordLabel={currentCard.wordLabel}
             subContent={currentCard.subContent}
             colors={cardColor}
+            hapticFeedback={hapticFeedback}
             onFlipped={(flipped) => {
               if (flipped) {
                 vibrate(20);
@@ -198,6 +200,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
               wordLabel={nextCard.wordLabel}
               subContent={nextCard.subContent}
               colors={players[currentIndex + 1].color}
+              hapticFeedback={hapticFeedback}
               onFlipped={(flipped) => {
               if (flipped) {
                 vibrate(20);
@@ -214,15 +217,17 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
       </p>
 
       <div className="w-full max-w-sm mb-6" style={{ minHeight: '56px' }}>
-        <button
+        <HapticButton
           onClick={handleNext}
+          enabled={hapticFeedback}
           className={`w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all duration-300 ${
             isCardHeld ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
-          style={{ backgroundColor: '#5352ed' }}
+          style={{ backgroundColor: 'var(--accent)' }}
+          ariaLabel={isLastPlayer ? 'Iniciar jogo' : 'Próximo jogador'}
         >
           {isLastPlayer ? 'Iniciar Jogo' : 'Próximo Jogador'}
-        </button>
+        </HapticButton>
       </div>
 
     </div>

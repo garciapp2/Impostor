@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Player, QuestionAnswer } from '../types';
+import HapticButton from './HapticButton';
 
 interface QuestionScreenProps {
   players: Player[];
@@ -55,7 +56,7 @@ const QuestionScreen: React.FC<QuestionScreenProps> = ({ players, question, fake
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 transition-colors duration-200">
           <div
             className="h-1.5 rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${progressPercentage}%`, backgroundColor: '#5352ed' }}
+            style={{ width: `${progressPercentage}%`, backgroundColor: 'var(--accent)' }}
           ></div>
         </div>
       </div>
@@ -68,12 +69,14 @@ const QuestionScreen: React.FC<QuestionScreenProps> = ({ players, question, fake
           >
             <span className="text-xs uppercase tracking-wider opacity-90 mb-4">Próximo jogador</span>
             <span className="text-4xl font-bold text-center break-words leading-tight mb-8">{currentPlayer.name}</span>
-            <button
+            <HapticButton
               onClick={handleReveal}
+              enabled={hapticFeedback}
               className="w-full py-3 rounded-2xl font-semibold bg-white/25 backdrop-blur-sm text-white border border-white/40 active:scale-98 transition-all"
+              ariaLabel="Ver minha pergunta"
             >
               Ver minha pergunta
-            </button>
+            </HapticButton>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center transition-colors duration-200">
             Só toque quando estiver com {currentPlayer.name}
@@ -83,7 +86,7 @@ const QuestionScreen: React.FC<QuestionScreenProps> = ({ players, question, fake
         <div className="flex-grow flex flex-col items-center justify-center w-full">
           <div className="w-full max-w-sm">
             <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-200">Categoria: {category}</p>
-            <div className="w-full rounded-3xl shadow-xl p-6 mb-4 text-white" style={{ backgroundColor: '#5352ed' }}>
+            <div className="w-full rounded-3xl shadow-xl p-6 mb-4 text-white" style={{ backgroundColor: 'var(--accent)' }}>
               <p className="text-xl font-bold text-center leading-snug">{shownQuestion}</p>
             </div>
             <textarea
@@ -95,16 +98,18 @@ const QuestionScreen: React.FC<QuestionScreenProps> = ({ players, question, fake
               className="w-full px-4 py-3 text-base bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none"
             />
             {/* Botão logo abaixo da caixa, pra não ficar escondido pelo teclado */}
-            <button
+            <HapticButton
               onClick={handleConfirm}
+              enabled={hapticFeedback}
               disabled={text.trim() === ''}
               className={`w-full mt-3 py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all ${
                 text.trim() === '' ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' : ''
               }`}
-              style={text.trim() !== '' ? { backgroundColor: '#5352ed' } : {}}
+              style={text.trim() !== '' ? { backgroundColor: 'var(--accent)' } : {}}
+              ariaLabel={isLastPlayer ? 'Ver respostas' : 'Confirmar e passar'}
             >
               {isLastPlayer ? 'Ver Respostas' : 'Confirmar e Passar'}
-            </button>
+            </HapticButton>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center transition-colors duration-200">
               Responda sem entregar de cara.. o impostor tem outra pergunta!
             </p>

@@ -41,10 +41,13 @@ interface CardProps {
   showHint?: boolean;
   wordLabel?: string;
   subContent?: string;
+  hapticFeedback?: boolean;
   onFlipped?: (flipped: boolean) => void;
 }
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, showHint, wordLabel, subContent, onFlipped }) => {
+const IOS_SWITCH_ATTRIBUTE = { switch: '' } as React.InputHTMLAttributes<HTMLInputElement>;
+
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, showHint, wordLabel, subContent, hapticFeedback = false, onFlipped }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => {
@@ -68,19 +71,20 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
   return (
     <div
       className="w-full max-w-sm h-[400px] relative select-none"
-      onMouseDown={handleInteractionStart}
-      onMouseUp={handleInteractionEnd}
-      onMouseLeave={handleInteractionEnd}
-      onTouchStart={(e) => {
-        e.preventDefault();
-        handleInteractionStart();
-      }}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        handleInteractionEnd();
-      }}
+      onPointerDown={handleInteractionStart}
+      onPointerUp={handleInteractionEnd}
+      onPointerCancel={handleInteractionEnd}
+      onPointerLeave={handleInteractionEnd}
       style={{ userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'manipulation' }}
     >
+      {hapticFeedback && (
+        <input
+          {...IOS_SWITCH_ATTRIBUTE}
+          type="checkbox"
+          className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
+          aria-label="Revelar carta"
+        />
+      )}
       <div
         className={`w-full h-full absolute transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
       >
