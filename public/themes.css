@@ -1,0 +1,256 @@
+/* =====================================================================
+   TEMAS DO IMPOSTOR, teste de temas
+   ---------------------------------------------------------------------
+   O app é construído com utilitários do Tailwind (CDN). Em vez de
+   reescrever todos os componentes, cada tema "de verdade" é uma camada
+   que repagina os utilitários existentes, escopada por [data-theme].
+
+   A ideia NÃO é trocar cores: é trocar a LINGUAGEM DE FORMA de cada
+   tema, geometria, peso, tipografia display, materiais e clima.
+
+   Regras de base:
+   - Quando um tema especial está ativo, a classe .dark NÃO é usada
+     (só o Clássico usa dark:). Basta sobrescrever os utilitários base.
+   - A cor da marca virou a variável --accent (usada aqui e nos estilos
+     inline dos componentes).
+   - A atmosfera de fundo vive em #root::before/::after (fixo, atrás do
+     conteúdo) e os containers de página ficam transparentes.
+   ===================================================================== */
+
+:root {
+  --accent: #5352ed; /* Clássico: mantém a marca original */
+  --danger: #ef4444;
+}
+
+/* Scrollbar segue a cor de destaque do tema atual. */
+.scrollbar-custom::-webkit-scrollbar-thumb { background: var(--accent) !important; }
+.scrollbar-custom { scrollbar-color: var(--accent) transparent; }
+
+/* Texto sobre a cor de destaque (elementos com background var(--accent)). */
+[data-theme] [style*="var(--accent)"] { color: var(--accent-ink, #fff) !important; }
+
+/* =====================================================================
+   1) EDITORIAL / BRUTALIST  📰
+   Papel de jornal, preto absoluto, uma cor de choque, cantos retos,
+   sombras duras deslocadas, tipografia display gigante (Anton).
+   ===================================================================== */
+[data-theme="editorial"] {
+  --bg: #ece6d8;
+  --surface: #ffffff;
+  --surface-2: #f3efe4;
+  --pill: #e7e0d0;
+  --raised: #ffffff;
+  --ink: #0a0a0a;
+  --ink-2: #35322b;
+  --ink-3: #6b665b;
+  --line: #0a0a0a;
+  --accent: #ff2d1f;
+  --accent-ink: #ffffff;
+  --danger: #111111;
+  --danger-bg: #e7e0d0;
+  --logo-fill: #0a0a0a;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-display: 'Anton', 'Archivo', sans-serif;
+}
+[data-theme="editorial"] body { font-family: var(--font-body); }
+
+[data-theme="editorial"] #root::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(10,10,10,0.10) 1px, transparent 1.4px);
+  background-size: 7px 7px;
+}
+
+[data-theme="editorial"] .bg-gray-50 { background-color: transparent !important; }
+[data-theme="editorial"] .bg-white { background-color: var(--surface) !important; }
+[data-theme="editorial"] .bg-white .bg-gray-50,
+[data-theme="editorial"] .bg-gray-200 { background-color: var(--surface-2) !important; }
+[data-theme="editorial"] .bg-gray-100 { background-color: var(--pill) !important; }
+[data-theme="editorial"] .bg-gray-100 .bg-white,
+[data-theme="editorial"] .bg-white .bg-white { background-color: var(--raised) !important; }
+
+[data-theme="editorial"] .bg-gradient-to-br { background-image: none !important; background-color: var(--ink) !important; }
+
+[data-theme="editorial"] .text-gray-900, [data-theme="editorial"] .text-gray-700 { color: var(--ink) !important; }
+[data-theme="editorial"] .text-gray-600, [data-theme="editorial"] .text-gray-500 { color: var(--ink-3) !important; }
+[data-theme="editorial"] .text-gray-400 { color: var(--ink-2) !important; }
+
+[data-theme="editorial"] .border-gray-100,
+[data-theme="editorial"] .border-gray-200,
+[data-theme="editorial"] .border-gray-600,
+[data-theme="editorial"] .border-gray-700 { border-color: var(--line) !important; }
+[data-theme="editorial"] .rounded-2xl,
+[data-theme="editorial"] .rounded-3xl { border: 3px solid var(--line) !important; }
+
+[data-theme="editorial"] [class*="rounded"] { border-radius: 0 !important; }
+
+[data-theme="editorial"] .shadow-sm,
+[data-theme="editorial"] .shadow-md { box-shadow: 4px 4px 0 var(--line) !important; }
+[data-theme="editorial"] .shadow-lg,
+[data-theme="editorial"] .shadow-xl,
+[data-theme="editorial"] .shadow-2xl { box-shadow: 8px 8px 0 var(--line) !important; }
+
+[data-theme="editorial"] .text-sm.font-semibold,
+[data-theme="editorial"] .text-lg.font-bold,
+[data-theme="editorial"] h2 {
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; font-weight: 400 !important;
+}
+[data-theme="editorial"] .text-sm.font-semibold { font-size: 1.02rem; line-height: 1.1; }
+[data-theme="editorial"] .text-base.font-bold,
+[data-theme="editorial"] .min-w-\[2\.5rem\] { font-family: var(--font-display); font-size: 1.7rem !important; line-height: 1; }
+[data-theme="editorial"] .text-4xl { font-family: var(--font-display); font-weight: 400 !important; letter-spacing: 0.01em; }
+
+/* =====================================================================
+   3) BUBBLEGUM / Y2K CANDY GLOSS  🫧
+   Não é só pastel: é MATERIAL. Botões "geleia" com brilho de verdade,
+   bordas grossas de adesivo (die-cut), tipografia redonda e gorda.
+   ===================================================================== */
+[data-theme="bubblegum"] {
+  --bg: #ffe3f3;
+  --surface: #ffffff;
+  --surface-2: #fff2fb;
+  --pill: #ffe4f4;
+  --raised: #ffffff;
+  --ink: #6a1f6f;
+  --ink-2: #a1548f;
+  --ink-3: #c489b3;
+  --line: #ff9fd8;        /* contorno de adesivo, grosso */
+  --accent: #ff3ea5;
+  --accent-ink: #ffffff;
+  --danger: #ff4d6d;
+  --danger-bg: #ffe0e7;
+  --logo-fill: linear-gradient(135deg, #ff5fb0 0%, #a98cff 100%);
+  --font-body: 'Fredoka', system-ui, sans-serif;
+  --font-display: 'Baloo 2', 'Fredoka', sans-serif;
+}
+[data-theme="bubblegum"] body { font-family: var(--font-body); }
+
+/* Atmosfera: bolhas pastel + brilhinhos (sparkles) discretos */
+[data-theme="bubblegum"] #root::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(60% 45% at 12% 8%, rgba(255,170,224,0.9) 0%, rgba(255,170,224,0) 60%),
+    radial-gradient(55% 40% at 90% 12%, rgba(150,200,255,0.9) 0%, rgba(150,200,255,0) 60%),
+    radial-gradient(70% 55% at 82% 96%, rgba(196,164,255,0.85) 0%, rgba(196,164,255,0) 60%),
+    radial-gradient(60% 50% at 8% 94%, rgba(170,255,222,0.75) 0%, rgba(170,255,222,0) 60%),
+    linear-gradient(160deg, #ffe9f6 0%, #eef1ff 100%);
+}
+[data-theme="bubblegum"] #root::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M120 60l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/%3E%3Cpath d='M70 120l1.2 3.6 3.6 1.2-3.6 1.2-1.2 3.6-1.2-3.6-3.6-1.2 3.6-1.2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Superfícies */
+[data-theme="bubblegum"] .bg-gray-50 { background-color: transparent !important; }
+[data-theme="bubblegum"] .bg-white { background-color: var(--surface) !important; }
+[data-theme="bubblegum"] .bg-white .bg-gray-50,
+[data-theme="bubblegum"] .bg-gray-200 { background-color: var(--surface-2) !important; }
+[data-theme="bubblegum"] .bg-gray-100 { background-color: var(--pill) !important; }
+[data-theme="bubblegum"] .bg-gray-100 .bg-white,
+[data-theme="bubblegum"] .bg-white .bg-white { background-color: var(--raised) !important; }
+
+/* Texto */
+[data-theme="bubblegum"] .text-gray-900, [data-theme="bubblegum"] .text-gray-700 { color: var(--ink) !important; }
+[data-theme="bubblegum"] .text-gray-600, [data-theme="bubblegum"] .text-gray-500 { color: var(--ink-2) !important; }
+[data-theme="bubblegum"] .text-gray-400 { color: var(--ink-3) !important; }
+
+/* Cantos bem gordos e fofos */
+[data-theme="bubblegum"] .rounded-3xl { border-radius: 34px !important; }
+[data-theme="bubblegum"] .rounded-2xl { border-radius: 28px !important; }
+[data-theme="bubblegum"] .rounded-xl { border-radius: 20px !important; }
+[data-theme="bubblegum"] .rounded-lg { border-radius: 16px !important; }
+
+/* Contornos GROSSOS de adesivo (die-cut) */
+[data-theme="bubblegum"] .border-gray-100,
+[data-theme="bubblegum"] .border-gray-200,
+[data-theme="bubblegum"] .border-gray-600,
+[data-theme="bubblegum"] .border-gray-700 { border-color: var(--line) !important; }
+[data-theme="bubblegum"] .rounded-2xl,
+[data-theme="bubblegum"] .rounded-3xl { border: 3px solid var(--line) !important; }
+[data-theme="bubblegum"] .rounded-xl.border { border-width: 2px !important; }
+
+/* Ícones em círculo = GELEIA brilhante */
+[data-theme="bubblegum"] .bg-gradient-to-br {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0) 48%),
+    linear-gradient(135deg, #ff8ed4 0%, #a98cff 100%) !important;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.75), 0 4px 12px rgba(255,75,180,0.35) !important;
+}
+
+/* Sombras coloridas e macias */
+[data-theme="bubblegum"] .shadow-sm { box-shadow: 0 4px 14px rgba(255,75,180,0.16) !important; }
+[data-theme="bubblegum"] .shadow-md,
+[data-theme="bubblegum"] .shadow-lg { box-shadow: 0 10px 24px rgba(255,75,180,0.26) !important; }
+[data-theme="bubblegum"] .shadow-xl,
+[data-theme="bubblegum"] .shadow-2xl { box-shadow: 0 16px 40px rgba(169,140,255,0.35) !important; }
+
+/* Tipografia redonda e gorda, com pop de adesivo */
+[data-theme="bubblegum"] .text-sm.font-semibold,
+[data-theme="bubblegum"] .text-lg.font-bold,
+[data-theme="bubblegum"] h2 { font-family: var(--font-display); font-weight: 700; }
+[data-theme="bubblegum"] .text-4xl { font-family: var(--font-display); font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+
+/* Botões de destaque = GELEIA de chiclete (brilho de verdade) */
+[data-theme="bubblegum"] [style*="var(--accent)"] {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 46%),
+    linear-gradient(180deg, #ff67bd 0%, #ff2f9c 100%) !important;
+  border: 2px solid #ff2f9c !important;
+  box-shadow: inset 0 2px 1px rgba(255,255,255,0.85), inset 0 -8px 14px rgba(185,0,92,0.28), 0 8px 16px rgba(255,62,165,0.4) !important;
+  font-family: var(--font-display); font-weight: 700; text-shadow: 0 1px 1px rgba(150,0,75,0.35);
+}
+
+/* =====================================================================
+   CORREÇÃO DE VAZAMENTOS DO CLÁSSICO
+   Vermelho de "excluir/deselecionar", índigo e anel de foco passam a
+   seguir o tema atual. (:not(classic) pega Editorial/Noir/Bubblegum.)
+   ===================================================================== */
+[data-theme]:not([data-theme="classic"]) .bg-red-100 { background-color: var(--danger-bg) !important; }
+[data-theme]:not([data-theme="classic"]) .bg-red-200 { background-color: var(--danger-bg) !important; filter: brightness(0.93); }
+[data-theme]:not([data-theme="classic"]) .text-red-600,
+[data-theme]:not([data-theme="classic"]) .text-red-500,
+[data-theme]:not([data-theme="classic"]) .text-red-400 { color: var(--danger) !important; }
+[data-theme]:not([data-theme="classic"]) .text-indigo-600,
+[data-theme]:not([data-theme="classic"]) .text-indigo-400 { color: var(--accent) !important; }
+[data-theme]:not([data-theme="classic"]) .focus\:ring-purple-500:focus,
+[data-theme]:not([data-theme="classic"]) .focus\:ring-indigo-500:focus { --tw-ring-color: var(--accent) !important; }
+
+/* =====================================================================
+   ANIMAÇÕES POR TEMA, cada tema se move de um jeito
+   (loops ambientes só quando o usuário não pediu menos movimento)
+   ===================================================================== */
+
+/* ---------- EDITORIAL: mecânico, impresso, seco ---------- */
+@keyframes ed-print { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
+[data-theme="editorial"] .screen-enter { animation: ed-print 0.34s cubic-bezier(0.2,0.9,0.2,1) forwards !important; }
+/* botões "afundam" na sombra dura (press brutalista) */
+[data-theme="editorial"] button:active { transform: translate(3px, 3px) !important; }
+[data-theme="editorial"] .shadow-sm:active,
+[data-theme="editorial"] .shadow-md:active { box-shadow: 1px 1px 0 var(--line) !important; }
+@media (hover: hover) {
+  [data-theme="editorial"] .rounded-2xl:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--line) !important; transition: transform .12s, box-shadow .12s; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ed-halftone { from { background-position: 0 0; } to { background-position: 14px 14px; } }
+  [data-theme="editorial"] #root::before { animation: ed-halftone 6s linear infinite; }
+}
+
+/* ---------- BUBBLEGUM: pula, treme e brilha ---------- */
+@keyframes bub-pop { 0% { opacity: 0; transform: scale(0.86) translateY(14px); } 60% { transform: scale(1.03); } 100% { opacity: 1; transform: scale(1); } }
+[data-theme="bubblegum"] .screen-enter { animation: bub-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards !important; }
+/* aperto de geleia ao tocar */
+[data-theme="bubblegum"] button:active { transform: scale(1.08, 0.86) !important; }
+@media (hover: hover) {
+  [data-theme="bubblegum"] .rounded-2xl:hover { transform: rotate(-0.6deg) scale(1.01); transition: transform .18s cubic-bezier(0.34,1.56,0.64,1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes bub-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  [data-theme="bubblegum"] .bg-gradient-to-br { animation: bub-float 3s ease-in-out infinite; }
+  @keyframes bub-twinkle { 0%,100% { opacity: 0.25; transform: rotate(0deg) scale(0.96); } 50% { opacity: 0.7; transform: rotate(8deg) scale(1.04); } }
+  [data-theme="bubblegum"] #root::after { animation: bub-twinkle 4.5s ease-in-out infinite; transform-origin: center; }
+  @keyframes bub-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+  [data-theme="bubblegum"] .text-4xl { animation: bub-breathe 2.8s ease-in-out infinite; }
+}
+
+/* A logo recolorida entra em cena junto do tema. */
+[data-theme="bubblegum"] .theme-logo { animation: bub-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards; }

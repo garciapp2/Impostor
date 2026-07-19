@@ -5,6 +5,7 @@ import { QUESTION_CATEGORIES } from '../constants/questions';
 import { GameMode, CustomCategory, CustomQuestionCategory, CustomLocation } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import Logo from './Logo';
+import ThemeSwitcher from './ThemeSwitcher';
 
 interface HomeScreenProps {
   gameMode: GameMode;
@@ -71,7 +72,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onCustomCategoriesChange,
   onStartGame,
 }) => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, darkToggleAvailable, theme, themes } = useTheme();
+  const currentTheme = themes.find(t => t.id === theme);
   const isSpy = gameMode === GameMode.SPY;
   const isQuestions = gameMode === GameMode.QUESTIONS;
   // Coringa é uma opção do modo Clássico (desativada por padrão).
@@ -90,6 +92,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     options: false,
   });
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const [showCustomCategoryModal, setShowCustomCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -140,27 +143,32 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </button>
       </div>
 
-      {/* Dark Mode Toggle */}
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          onClick={toggleTheme}
-          className="relative w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors duration-300 focus:outline-none active:outline-none"
-          aria-label="Toggle dark mode"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isDark ? 'translate-x-6' : 'translate-x-0'}`}>
-            {isDark ? (
-              <svg className="w-4 h-4 text-yellow-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-              </svg>
-            )}
-          </div>
-        </button>
+      {/* Theme controls: seletor de tema + toggle claro/escuro (só no Clássico) */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        {darkToggleAvailable && (
+          <button
+            onClick={toggleTheme}
+            className="relative w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors duration-300 focus:outline-none active:outline-none"
+            aria-label="Toggle dark mode"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isDark ? 'translate-x-6' : 'translate-x-0'}`}>
+              {isDark ? (
+                <svg className="w-4 h-4 text-yellow-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              )}
+            </div>
+          </button>
+        )}
       </div>
+
+      {/* Modal de temas (aberto pela seção Opções) */}
+      <ThemeSwitcher open={showThemePicker} onClose={() => setShowThemePicker(false)} />
 
       {/* Header */}
       <div className="pt-16 pb-2 px-4 text-center">
@@ -193,7 +201,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                 }`}
-                style={gameMode === GameMode.CLASSIC ? { backgroundColor: '#5352ed' } : {}}
+                style={gameMode === GameMode.CLASSIC ? { backgroundColor: 'var(--accent)' } : {}}
               >
                 Clássico
               </button>
@@ -204,7 +212,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                 }`}
-                style={gameMode === GameMode.FAKE ? { backgroundColor: '#5352ed' } : {}}
+                style={gameMode === GameMode.FAKE ? { backgroundColor: 'var(--accent)' } : {}}
               >
                 Cegas
               </button>
@@ -215,7 +223,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                 }`}
-                style={gameMode === GameMode.SPY ? { backgroundColor: '#5352ed' } : {}}
+                style={gameMode === GameMode.SPY ? { backgroundColor: 'var(--accent)' } : {}}
               >
                 Espião
               </button>
@@ -226,7 +234,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                 }`}
-                style={gameMode === GameMode.QUESTIONS ? { backgroundColor: '#5352ed' } : {}}
+                style={gameMode === GameMode.QUESTIONS ? { backgroundColor: 'var(--accent)' } : {}}
               >
                 Perguntas
               </button>
@@ -611,7 +619,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all active:scale-95"
                   style={{ 
-                    backgroundColor: CATEGORIES.every(cat => selectedCategories.includes(cat.id)) ? '#ef4444' : '#5352ed',
+                    backgroundColor: CATEGORIES.every(cat => selectedCategories.includes(cat.id)) ? 'var(--danger)' : 'var(--accent)',
                     color: 'white'
                   }}
                 >
@@ -629,7 +637,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                         ? 'text-white shadow-sm'
                         : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                     }`}
-                    style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                    style={isSelected ? { backgroundColor: 'var(--accent)' } : {}}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{category.name}</span>
@@ -686,7 +694,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   setShowCustomCategoryModal(true);
                 }}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
-                style={{ backgroundColor: '#5352ed' }}
+                style={{ backgroundColor: 'var(--accent)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -705,7 +713,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                           ? 'text-white shadow-sm'
                           : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                       }`}
-                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                      style={isSelected ? { backgroundColor: 'var(--accent)' } : {}}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{category.name}</span>
@@ -796,7 +804,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     }}
                     className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all active:scale-95"
                     style={{
-                      backgroundColor: QUESTION_CATEGORIES.every(cat => selectedQuestionCategories.includes(cat.id)) ? '#ef4444' : '#5352ed',
+                      backgroundColor: QUESTION_CATEGORIES.every(cat => selectedQuestionCategories.includes(cat.id)) ? 'var(--danger)' : 'var(--accent)',
                       color: 'white'
                     }}
                   >
@@ -819,7 +827,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                           ? 'text-white shadow-sm'
                           : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                       }`}
-                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                      style={isSelected ? { backgroundColor: 'var(--accent)' } : {}}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{category.name}</span>
@@ -873,7 +881,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               <button
                 onClick={() => openExtraModal('question', null, '', [])}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
-                style={{ backgroundColor: '#5352ed' }}
+                style={{ backgroundColor: 'var(--accent)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -892,7 +900,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                         onQuestionCategoriesChange(next);
                       }}
                       className={`flex-1 px-3 py-2.5 rounded-xl text-left text-sm transition-all ${isSelected ? 'text-white shadow-sm' : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'}`}
-                      style={isSelected ? { backgroundColor: '#5352ed' } : {}}
+                      style={isSelected ? { backgroundColor: 'var(--accent)' } : {}}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{cat.name}</span>
@@ -966,7 +974,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               <button
                 onClick={() => openExtraModal('location', null, '', [])}
                 className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white transition-all active:scale-95 flex items-center justify-center space-x-2"
-                style={{ backgroundColor: '#5352ed' }}
+                style={{ backgroundColor: 'var(--accent)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1036,6 +1044,25 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
           {isExpanded.options && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-2 transition-colors duration-200">
+              {/* Tema visual (teste de temas) */}
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex-1 pr-3">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Tema visual</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Muda a cara do app. É um teste, troque à vontade.</p>
+                </div>
+                <button
+                  onClick={() => setShowThemePicker(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-sm font-semibold text-gray-900 dark:text-gray-100 active:scale-95 transition-transform flex-shrink-0"
+                  aria-label="Escolher tema"
+                >
+                  <span className="text-base leading-none">{currentTheme?.emoji}</span>
+                  <span>{currentTheme?.name}</span>
+                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
               {/* Permitir repetição (não se aplica ao modo Perguntas) */}
               {!isQuestions && (
                 <div className="flex items-center justify-between py-3">
@@ -1046,7 +1073,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={() => onOptionChange('allowRepeats', !allowRepeats)}
                     className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${allowRepeats ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={allowRepeats ? { backgroundColor: '#5352ed' } : {}}
+                    style={allowRepeats ? { backgroundColor: 'var(--accent)' } : {}}
                     role="switch"
                     aria-checked={allowRepeats}
                     aria-label="Permitir repetição"
@@ -1066,7 +1093,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={() => onOptionChange('showHintToImposter', !showHintToImposter)}
                     className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${showHintToImposter ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={showHintToImposter ? { backgroundColor: '#5352ed' } : {}}
+                    style={showHintToImposter ? { backgroundColor: 'var(--accent)' } : {}}
                     role="switch"
                     aria-checked={showHintToImposter}
                     aria-label="Mostrar dica ao impostor"
@@ -1085,7 +1112,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <button
                   onClick={() => onOptionChange('hapticFeedback', !hapticFeedback)}
                   className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${hapticFeedback ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                  style={hapticFeedback ? { backgroundColor: '#5352ed' } : {}}
+                  style={hapticFeedback ? { backgroundColor: 'var(--accent)' } : {}}
                   role="switch"
                   aria-checked={hapticFeedback}
                   aria-label="Vibração"
@@ -1104,7 +1131,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={() => onOptionChange('enableJokers', !enableJokers)}
                     className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${enableJokers ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={enableJokers ? { backgroundColor: '#5352ed' } : {}}
+                    style={enableJokers ? { backgroundColor: 'var(--accent)' } : {}}
                     role="switch"
                     aria-checked={enableJokers}
                     aria-label="Ativar coringa"
@@ -1124,7 +1151,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={() => onOptionChange('showLocationRoles', !showLocationRoles)}
                     className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${showLocationRoles ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={showLocationRoles ? { backgroundColor: '#5352ed' } : {}}
+                    style={showLocationRoles ? { backgroundColor: 'var(--accent)' } : {}}
                     role="switch"
                     aria-checked={showLocationRoles}
                     aria-label="Mostrar função no local"
@@ -1148,7 +1175,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               ? ''
               : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
           }`}
-          style={canStart ? { backgroundColor: isDark ? '#6366f1' : '#5352ed' } : {}}
+          style={canStart ? { backgroundColor: isDark ? '#6366f1' : 'var(--accent)' } : {}}
         >
           {!canStart && selectedCategories.length === 0 && 'Selecione pelo menos uma categoria'}
           {!canStart && selectedCategories.length > 0 && imposterMax > playerCount && 'Muitos impostores'}
@@ -1195,8 +1222,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     {isQuestions
                       ? 'Cada jogador vê uma pergunta, digita a resposta no celular e passa adiante. O impostor recebe outra pergunta da mesma categoria.'
                       : isSpy
-                      ? 'Cada jogador desliza para ver o local secreto (e sua função nele) — exceto o espião, que verá "VOCÊ É O ESPIÃO".'
-                      : <>Cada jogador desliza para ver a palavra secreta — exceto {gameMode === GameMode.FAKE ? 'os impostores, que verão uma palavra diferente' : 'os impostores, que verão "VOCÊ É O IMPOSTOR"'}.</>
+                      ? 'Cada jogador desliza para ver o local secreto (e sua função nele), exceto o espião, que verá "VOCÊ É O ESPIÃO".'
+                      : <>Cada jogador desliza para ver a palavra secreta, exceto {gameMode === GameMode.FAKE ? 'os impostores, que verão uma palavra diferente' : 'os impostores, que verão "VOCÊ É O IMPOSTOR"'}.</>
                     }
                   </p>
                 </div>
@@ -1219,7 +1246,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     {isQuestions
                       ? 'Como o impostor respondeu outra pergunta, a resposta dele tende a destoar. Todos se justificam e apontam quem acham que é o impostor.'
                       : isSpy
-                      ? 'Responda de um jeito que prove que você conhece o local, mas sem ser óbvio demais — se entregar o local de bandeja, o espião descobre na hora.'
+                      ? 'Responda de um jeito que prove que você conhece o local, mas sem ser óbvio demais, se entregar o local de bandeja, o espião descobre na hora.'
                       : gameMode === GameMode.FAKE
                         ? 'O Impostor deve tentar se misturar sem saber que é impostor.'
                         : 'O Impostor deve fingir e tentar se misturar sem saber a palavra.'
@@ -1230,7 +1257,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 {isSpy && (
                   <div className="flex items-start space-x-3">
                     <span className="text-red-500 font-bold text-lg flex-shrink-0">5.</span>
-                    <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">O Espião não sabe onde está: ele blefa nas respostas e tenta descobrir o local pelas perguntas — sem ser desmascarado.</p>
+                    <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">O Espião não sabe onde está: ele blefa nas respostas e tenta descobrir o local pelas perguntas, sem ser desmascarado.</p>
                   </div>
                 )}
 
@@ -1257,8 +1284,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <span className="text-red-500 font-bold text-lg flex-shrink-0">{isQuestions ? '5.' : (jokersActive || isSpy) ? '7.' : '6.'}</span>
                   <p className="text-gray-900 dark:text-white text-sm leading-relaxed transition-colors duration-200">
                     {isSpy
-                      ? 'Quando estiverem prontos, votem em quem acham que é o Espião — depois revelem a verdade!'
-                      : 'Quando estiverem prontos, votem em quem acham que é o Impostor — depois revelem a verdade!'
+                      ? 'Quando estiverem prontos, votem em quem acham que é o Espião, depois revelem a verdade!'
+                      : 'Quando estiverem prontos, votem em quem acham que é o Impostor, depois revelem a verdade!'
                     }
                   </p>
                 </div>
@@ -1379,7 +1406,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   }}
                   disabled={!newCategoryName.trim() || newCategoryWords.split('\n').filter(w => w.trim().length > 0).length < 3}
                   className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#5352ed' }}
+                  style={{ backgroundColor: 'var(--accent)' }}
                 >
                   {editingCategory ? 'Salvar' : 'Criar'}
                 </button>
@@ -1462,7 +1489,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button onClick={closeExtraModal} className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                     Cancelar
                   </button>
-                  <button onClick={save} disabled={!valid} className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: '#5352ed' }}>
+                  <button onClick={save} disabled={!valid} className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: 'var(--accent)' }}>
                     {editingExtraId ? 'Salvar' : 'Criar'}
                   </button>
                 </div>

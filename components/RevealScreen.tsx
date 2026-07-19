@@ -54,7 +54,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           <div className="flex-1 flex flex-col overflow-y-auto py-6">
             <div className="my-auto w-full">
             <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-200">Categoria: {qd.category}</p>
-            <div className="w-full max-w-sm mx-auto rounded-3xl shadow-xl p-6 mb-5 text-white" style={{ backgroundColor: '#5352ed' }}>
+            <div className="w-full max-w-sm mx-auto rounded-3xl shadow-xl p-6 mb-5 text-white" style={{ backgroundColor: 'var(--accent)' }}>
               <p className="text-sm opacity-90 mb-1 text-center">A pergunta era:</p>
               <p className="text-xl font-bold text-center leading-snug">{qd.question}</p>
             </div>
@@ -76,7 +76,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
             <button
               onClick={handleReveal}
               className="w-full max-w-sm py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all mx-auto block"
-              style={{ backgroundColor: '#5352ed' }}
+              style={{ backgroundColor: 'var(--accent)' }}
             >
               Revelar Impostor
             </button>
@@ -90,11 +90,11 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           <div className={`w-full mb-2 ${revealStep >= 1 ? 'animate-fade-in' : 'opacity-0'}`}>
             <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 drop-shadow-sm transition-colors duration-200">Hora da Verdade!</h1>
           </div>
-          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
+          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: 'var(--danger)' }}>
             <p className="text-lg opacity-90 mb-3">{cheaterLabel}</p>
             <p className="text-3xl font-bold drop-shadow-lg leading-tight">{displayText}</p>
           </div>
-          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
+          <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: 'var(--accent)' }}>
             <p className="text-xs opacity-90 mb-1">A pergunta de todos era:</p>
             <p className="text-lg font-bold drop-shadow-lg leading-snug mb-3">{qd.question}</p>
             <div className="w-full pt-3 border-t border-white border-opacity-30">
@@ -107,7 +107,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           <button
             onClick={onNewRound}
             className="w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2"
-            style={{ backgroundColor: '#5352ed' }}
+            style={{ backgroundColor: 'var(--accent)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -132,7 +132,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
     return (
       <div className="flex flex-col h-full text-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: '#5352ed' }}>
+          <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: 'var(--accent)' }}>
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -154,7 +154,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           <button
             onClick={handleReveal}
             className="w-full max-w-sm py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all mx-auto"
-            style={{ backgroundColor: '#5352ed' }}
+            style={{ backgroundColor: 'var(--accent)' }}
           >
             Revelar Resultado
           </button>
@@ -171,13 +171,13 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
           <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 drop-shadow-sm transition-colors duration-200">Hora da Verdade!</h1>
         </div>
         {/* Palavra Secreta */}
-        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#5352ed' }}>
+        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 1 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: 'var(--accent)' }}>
           <p className="text-sm opacity-90 mb-2">{secretLabel}</p>
           <p className="text-3xl font-bold drop-shadow-lg leading-tight">{secretWord}</p>
         </div>
 
         {/* Impostores */}
-        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: '#ef4444' }}>
+        <div className={`w-full max-w-sm text-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 ${revealStep >= 2 ? 'animate-reveal' : 'opacity-0'}`} style={{ backgroundColor: 'var(--danger)' }}>
           <p className="text-lg opacity-90 mb-3">
             {cheaterLabel}
           </p>
@@ -212,7 +212,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
         <button
           onClick={onNewRound}
           className="w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2"
-          style={{ backgroundColor: '#5352ed' }}
+          style={{ backgroundColor: 'var(--accent)' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

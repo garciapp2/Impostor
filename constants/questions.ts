@@ -8,7 +8,7 @@ export interface QuestionCategory {
 // OUTRA pergunta da MESMA categoria. Regra de ouro do design: dentro de uma
 // categoria, TODA pergunta deve pedir o mesmo TIPO de resposta (uma pessoa, uma
 // comida, um lugar, um filme...). Assim a resposta do impostor combina no formato,
-// mas destoa no conteúdo — dá pra pegar, mas não é óbvio. Poucas categorias, cada
+// mas destoa no conteúdo, dá pra pegar, mas não é óbvio. Poucas categorias, cada
 // uma bem recheada e coesa.
 export const QUESTION_CATEGORIES: QuestionCategory[] = [
   {
