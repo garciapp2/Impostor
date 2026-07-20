@@ -146,7 +146,7 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
               Hora de conversar e pegar o Impostor.
             </p>
             {rouletteRule && (
-              <div className="mt-5 w-full max-w-sm mx-auto rounded-3xl shadow-xl p-5 text-white animate-reveal" style={{ backgroundColor: '#5352ed' }}>
+              <div className="mt-5 w-full max-w-sm mx-auto rounded-3xl shadow-xl p-5 text-white animate-reveal" style={{ backgroundColor: 'var(--accent)' }}>
                 <p className="text-xs uppercase tracking-widest opacity-90 mb-2">Regra da rodada</p>
                 <p className="text-2xl font-bold leading-tight mb-1">{rouletteRule.title}</p>
                 <p className="text-sm opacity-95 leading-snug">{rouletteRule.description}</p>

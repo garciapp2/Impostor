@@ -252,7 +252,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     ? 'text-white shadow-sm'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
                 }`}
-                style={gameMode === GameMode.CHAMPIONSHIP ? { backgroundColor: '#5352ed' } : {}}
+                style={gameMode === GameMode.CHAMPIONSHIP ? { backgroundColor: 'var(--accent)' } : {}}
               >
                 Campeonato
               </button>
@@ -1212,7 +1212,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={() => onOptionChange('enableRoulette', !enableRoulette)}
                     className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${enableRoulette ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    style={enableRoulette ? { backgroundColor: '#5352ed' } : {}}
+                    style={enableRoulette ? { backgroundColor: 'var(--accent)' } : {}}
                     role="switch"
                     aria-checked={enableRoulette}
                     aria-label="Ativar roleta de regras"
