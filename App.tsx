@@ -1,9 +1,11 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameState, Player, GameConfig, GameMode, CustomCategory, CustomQuestionCategory, CustomLocation, QuestionAnswer } from './types';
+import { GameState, Player, GameConfig, GameMode, CustomCategory, CustomQuestionCategory, CustomLocation, QuestionAnswer, RoundOutcome, DiaryEntry } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { LOCATIONS, getLocationByName } from './constants/locations';
 import { drawQuestionRound, DEFAULT_QUESTION_CATEGORY_IDS } from './constants/questions';
+import { drawRouletteRule } from './constants/roulette';
+import { drawMissions } from './constants/missions';
 import { getCardColors } from './components/Card';
 import { ThemeProvider } from './contexts/ThemeContext';
 
@@ -11,6 +13,9 @@ import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
 import QuestionScreen from './components/QuestionScreen';
 import RevealScreen from './components/RevealScreen';
+import ChampionshipRevealScreen from './components/ChampionshipRevealScreen';
+
+interface RouletteRuleState { title: string; description: string; }
 
 // Funções para localStorage
 const STORAGE_KEY = 'impostor_game_config';
@@ -57,6 +62,8 @@ const loadGameConfig = (): GameConfig | null => {
         jokerMin: 1,
         jokerMax: 1,
         selectedQuestionCategories: DEFAULT_QUESTION_CATEGORY_IDS,
+        championshipTarget: 10,
+        enableRoulette: false,
         ...migrated,
       };
     }
@@ -118,6 +125,8 @@ const App: React.FC = () => {
       hapticFeedback: true,
       showLocationRoles: true,
       selectedQuestionCategories: DEFAULT_QUESTION_CATEGORY_IDS,
+      championshipTarget: 10,
+      enableRoulette: false,
     };
   });
   const [secretWord, setSecretWord] = useState<string>('');
@@ -129,9 +138,23 @@ const App: React.FC = () => {
   const [fakeQuestion, setFakeQuestion] = useState<string>('');
   const [questionCategory, setQuestionCategory] = useState<string>('');
   const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
+  // Modo Roleta
+  const [rouletteRule, setRouletteRule] = useState<RouletteRuleState | null>(null);
+  // Modo Campeonato: placar e diário da sessão (só duram a sessão de jogo).
+  const [champScores, setChampScores] = useState<Record<string, number>>({});
+  const [champDiary, setChampDiary] = useState<DiaryEntry[]>([]);
+  const [champRound, setChampRound] = useState<number>(1);
 
   const handleStartGame = () => {
     setIsTransitioning(true);
+    // Campeonato: zera placar/diário e reinicia a contagem de rodadas.
+    if (gameConfig.gameMode === GameMode.CHAMPIONSHIP) {
+      const initialScores: Record<string, number> = {};
+      gameConfig.playerNames.forEach(n => { initialScores[n] = 0; });
+      setChampScores(initialScores);
+      setChampDiary([]);
+      setChampRound(1);
+    }
     setupNewRound(
       gameConfig.gameMode,
       gameConfig.playerNames,
@@ -142,7 +165,8 @@ const App: React.FC = () => {
       gameConfig.jokerMax,
       gameConfig.selectedCategories,
       gameConfig.allowRepeats,
-      gameConfig.selectedQuestionCategories
+      gameConfig.selectedQuestionCategories,
+      gameConfig.enableRoulette
     );
     setTimeout(() => {
       setGameState(GameState.GAME);
@@ -160,10 +184,14 @@ const App: React.FC = () => {
     jokerMax: number,
     selectedCategories: string[],
     allowRepeats: boolean,
-    selectedQuestionCategories: string[]
+    selectedQuestionCategories: string[],
+    enableRoulette: boolean
   ) => {
     const isSpy = gameMode === GameMode.SPY;
     const isQuestions = gameMode === GameMode.QUESTIONS;
+    const isChampionship = gameMode === GameMode.CHAMPIONSHIP;
+    // Roleta é uma opção do Clássico e do Cegas: sorteia uma regra por rodada.
+    const rouletteActive = enableRoulette && (gameMode === GameMode.CLASSIC || gameMode === GameMode.FAKE);
 
     let word = '';
     let spyLocation: ReturnType<typeof getLocationByName> = null;
@@ -207,6 +235,17 @@ const App: React.FC = () => {
         setUsedWords(prev => (resetUsed ? [word] : [...prev, word]));
       }
     }
+
+    // Roleta (opção): sorteia uma regra da rodada que vale para todos.
+    if (rouletteActive) {
+      const { rule, hint } = drawRouletteRule();
+      setRouletteRule({ title: rule.title, description: rule.description + (hint || '') });
+    } else {
+      setRouletteRule(null);
+    }
+
+    // Modo Campeonato: cada jogador ganha uma missão secreta na carta.
+    const roundMissions = isChampionship ? drawMissions(currentNames.length) : [];
 
     // Select random number of imposters within range
     const imposterCount = Math.floor(Math.random() * (imposterMax - imposterMin + 1)) + imposterMin;
@@ -285,6 +324,7 @@ const App: React.FC = () => {
         color: getCardColors(colorIndex),
         fakeWord: fakeWordsMap.get(index),
         role: roleMap.get(index),
+        mission: isChampionship ? roundMissions[index]?.text : undefined,
       };
     });
     
@@ -295,8 +335,31 @@ const App: React.FC = () => {
     setPlayers(newPlayers);
   }, [usedWords, customCategories, customQuestionCategories, customLocations]);
 
+  const handleScoreRound = (outcome: RoundOutcome, missionAchievers: string[]) => {
+    const imposterNames = players.filter(p => p.isImposter).map(p => p.name);
+    const innocentNames = players.filter(p => !p.isImposter).map(p => p.name);
+    setChampScores(prev => {
+      const next = { ...prev };
+      const winners = outcome === 'imposters' ? imposterNames : innocentNames;
+      const pointsPerWinner = outcome === 'imposters' ? 3 : 1;
+      winners.forEach(n => { next[n] = (next[n] || 0) + pointsPerWinner; });
+      missionAchievers.forEach(n => { next[n] = (next[n] || 0) + 1; });
+      return next;
+    });
+    setChampDiary(prev => [...prev, {
+      round: champRound,
+      secretWord,
+      imposterNames,
+      outcome,
+      missionAchievers,
+    }]);
+  };
+
   const handleNewRound = () => {
     setIsTransitioning(true);
+    if (gameConfig.gameMode === GameMode.CHAMPIONSHIP) {
+      setChampRound(r => r + 1);
+    }
     // Aguardar a animação de saída terminar antes de atualizar os dados
     setTimeout(() => {
       // Atualizar os dados no meio da transição (quando a tela anterior já saiu)
@@ -358,6 +421,7 @@ const App: React.FC = () => {
             showHintToImposter={gameConfig.showHintToImposter}
             hapticFeedback={gameConfig.hapticFeedback}
             showLocationRoles={gameConfig.showLocationRoles}
+            enableRoulette={gameConfig.enableRoulette}
             onOptionChange={(key, value) => {
               const newConfig = { ...gameConfig, [key]: value };
               setGameConfig(newConfig);
@@ -428,6 +492,12 @@ const App: React.FC = () => {
               setCustomLocations(locs);
               saveJson(CUSTOM_LOCATIONS_KEY, locs);
             }}
+            championshipTarget={gameConfig.championshipTarget}
+            onChampionshipTargetChange={(target) => {
+              const newConfig = { ...gameConfig, championshipTarget: target };
+              setGameConfig(newConfig);
+              saveGameConfig(newConfig);
+            }}
             onStartGame={handleStartGame}
           />
         );
@@ -470,6 +540,22 @@ const App: React.FC = () => {
           />
         );
       case GameState.REVEAL:
+        if (gameConfig.gameMode === GameMode.CHAMPIONSHIP) {
+          return (
+            <ChampionshipRevealScreen
+              players={players}
+              secretWord={secretWord}
+              round={champRound}
+              target={gameConfig.championshipTarget}
+              scores={champScores}
+              diary={champDiary}
+              hapticFeedback={gameConfig.hapticFeedback}
+              onScoreRound={handleScoreRound}
+              onNewRound={handleNewRound}
+              onBackToStart={handleBackToStart}
+            />
+          );
+        }
         const imposters = players.filter(p => p.isImposter);
         const imposterNames = imposters.map(p => p.name).join(', ');
         const jokers = players.filter(p => p.isJoker);
@@ -495,6 +581,7 @@ const App: React.FC = () => {
             gameMode={gameConfig.gameMode}
             imposterFakeWords={imposterFakeWords}
             questionData={questionData}
+            rouletteRule={rouletteRule}
             onNewRound={handleNewRound}
             onBackToStart={handleBackToStart}
           />

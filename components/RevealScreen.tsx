@@ -14,11 +14,12 @@ interface RevealScreenProps {
   gameMode: GameMode;
   imposterFakeWords?: Array<{ name: string; word: string }>;
   questionData?: { question: string; fakeQuestion: string; category: string; answers: QuestionAnswer[] };
+  rouletteRule?: { title: string; description: string } | null;
   onNewRound: () => void;
   onBackToStart: () => void;
 }
 
-const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, gameMode, imposterFakeWords, questionData, onNewRound, onBackToStart }) => {
+const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCount, jokerNames, jokerCount, totalPlayers, secretWord, firstPlayerName, gameMode, imposterFakeWords, questionData, rouletteRule, onNewRound, onBackToStart }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealStep, setRevealStep] = useState(0);
 
@@ -144,6 +145,13 @@ const RevealScreen: React.FC<RevealScreenProps> = ({ imposterNames, imposterCoun
             <p className="text-lg text-gray-700 dark:text-gray-300 transition-colors duration-200">
               Hora de conversar e pegar o Impostor.
             </p>
+            {rouletteRule && (
+              <div className="mt-5 w-full max-w-sm mx-auto rounded-3xl shadow-xl p-5 text-white animate-reveal" style={{ backgroundColor: '#5352ed' }}>
+                <p className="text-xs uppercase tracking-widest opacity-90 mb-2">Regra da rodada</p>
+                <p className="text-2xl font-bold leading-tight mb-1">{rouletteRule.title}</p>
+                <p className="text-sm opacity-95 leading-snug">{rouletteRule.description}</p>
+              </div>
+            )}
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 transition-colors duration-200">Começa falando:</p>
               <p className="text-xl font-semibold text-indigo-600 dark:text-indigo-400 transition-colors duration-200">{firstPlayerName}</p>

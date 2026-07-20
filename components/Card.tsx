@@ -41,13 +41,14 @@ interface CardProps {
   showHint?: boolean;
   wordLabel?: string;
   subContent?: string;
+  mission?: string;
   hapticFeedback?: boolean;
   onFlipped?: (flipped: boolean) => void;
 }
 
 const IOS_SWITCH_ATTRIBUTE = { switch: '' } as React.InputHTMLAttributes<HTMLInputElement>;
 
-const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, showHint, wordLabel, subContent, hapticFeedback = false, onFlipped }) => {
+const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImposter, isJoker, colors, isFakeWord, showHint, wordLabel, subContent, mission, hapticFeedback = false, onFlipped }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleInteractionStart = () => {
@@ -59,6 +60,10 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
     onFlipped?.(false);
   };
   
+  // Cartas com bloco embaixo (coringa ou missão) usam layout empilhado, mantendo
+  // a palavra centralizada no espaço restante em vez de no card inteiro.
+  const stacked = isJoker || !!mission;
+
   const frontGradientStyle = { backgroundImage: `linear-gradient(to bottom right, ${colors[0]}, ${colors[1]})`};
   const backGradientStyle = { 
     backgroundImage: `linear-gradient(to bottom right, ${
@@ -95,9 +100,9 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
         </div>
 
         {/* Card Back */}
-        <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center ${isJoker ? 'justify-between' : 'justify-center'} p-6 rotate-y-180 text-white select-none`}>
+        <div style={{ ...backGradientStyle, userSelect: 'none', WebkitUserSelect: 'none' }} className={`absolute w-full h-full backface-hidden rounded-3xl shadow-xl flex flex-col items-center ${stacked ? 'justify-between' : 'justify-center'} p-6 rotate-y-180 text-white select-none`}>
           {/* Top: Category */}
-          <div className={`w-full flex justify-center ${isJoker ? 'pt-2' : 'absolute top-6'}`}>
+          <div className={`w-full flex justify-center ${stacked ? 'pt-1' : 'absolute top-6'}`}>
             {(!isImposter || isFakeWord) && category && (
               <span className="text-xs font-medium opacity-90 text-center select-none">Categoria: {category}</span>
             )}
@@ -123,8 +128,16 @@ const Card: React.FC<CardProps> = ({ frontContent, backContent, category, isImpo
 
           {/* Bottom: Joker message */}
           {isJoker && (
-            <div className="w-full flex justify-center pb-2">
+            <div className="w-full flex justify-center pb-1">
               <span className="text-2xl font-bold uppercase tracking-wider select-none drop-shadow-lg">VOCÊ É O CORINGA</span>
+            </div>
+          )}
+
+          {/* Bottom: Secret mission (Championship mode) */}
+          {mission && (
+            <div className="w-full rounded-2xl bg-black/20 px-4 py-3 flex flex-col items-center select-none">
+              <span className="text-[10px] uppercase tracking-widest opacity-80 mb-1 select-none">Missão secreta</span>
+              <span className="text-sm font-semibold text-center leading-snug select-none">{mission}</span>
             </div>
           )}
         </div>
