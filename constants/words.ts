@@ -126,7 +126,7 @@ export const CATEGORIES: WordCategory[] = [
       'Esgrima', 'F1', 'Futebol', 'Futevôlei', 'Futsal',
       'Ginástica', 'Golfe', 'Halterofilismo', 'Handebol', 'Hipismo',
       'Hóquei', 'Jiu-jitsu', 'Judô', 'Karate', 'Luta-livre',
-      'Maratona', 'MMA', 'Motocross', 'MTB',
+      'Maratona', 'MMA', 'Motocross',
       'Natação', 'Paraquedismo', 'Patinação', 'Ping-pong',
       'Remo', 'Rugby', 'Sinuca', 'Skate', 'Surfe',
       'Taekwondo', 'Tênis', 'Tiro', 'Triatlo', 'Vela',

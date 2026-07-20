@@ -373,7 +373,8 @@ const App: React.FC = () => {
         gameConfig.jokerMax,
         gameConfig.selectedCategories,
         gameConfig.allowRepeats,
-        gameConfig.selectedQuestionCategories
+        gameConfig.selectedQuestionCategories,
+        gameConfig.enableRoulette
       );
       // Mudar para a tela de cards
       setGameState(GameState.GAME);
