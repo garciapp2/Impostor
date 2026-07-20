@@ -174,6 +174,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
             showHint={showHintToImposter}
             wordLabel={currentCard.wordLabel}
             subContent={currentCard.subContent}
+            mission={currentPlayer.mission}
             colors={cardColor}
             hapticFeedback={hapticFeedback}
             onFlipped={(flipped) => {
@@ -199,6 +200,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ players, secretWord, secretWord
               showHint={showHintToImposter}
               wordLabel={nextCard.wordLabel}
               subContent={nextCard.subContent}
+              mission={players[currentIndex + 1].mission}
               colors={players[currentIndex + 1].color}
               hapticFeedback={hapticFeedback}
               onFlipped={(flipped) => {

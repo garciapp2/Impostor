@@ -10,6 +10,19 @@ export enum GameMode {
   FAKE = 'fake',
   SPY = 'spy',
   QUESTIONS = 'questions',
+  CHAMPIONSHIP = 'championship',
+}
+
+// Resultado de uma rodada do Campeonato, usado para pontuar.
+export type RoundOutcome = 'imposters' | 'innocents';
+
+// Uma entrada do diário da sessão (Campeonato): o que rolou numa rodada.
+export interface DiaryEntry {
+  round: number;
+  secretWord: string;
+  imposterNames: string[];
+  outcome: RoundOutcome;
+  missionAchievers: string[];
 }
 
 export interface QuestionAnswer {
@@ -25,6 +38,8 @@ export interface Player {
   color: string[];
   fakeWord?: string;
   role?: string;
+  /** Missão secreta (só modo Campeonato). */
+  mission?: string;
 }
 
 export interface GameConfig {
@@ -42,6 +57,10 @@ export interface GameConfig {
   hapticFeedback: boolean;
   showLocationRoles: boolean;
   selectedQuestionCategories: string[];
+  /** Meta de pontos do modo Campeonato. */
+  championshipTarget: number;
+  /** Sorteia uma regra por rodada (opção do Clássico e do Cegas). */
+  enableRoulette: boolean;
 }
 
 export interface CustomCategory {

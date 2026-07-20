@@ -22,13 +22,14 @@ interface HomeScreenProps {
   showHintToImposter: boolean;
   hapticFeedback: boolean;
   showLocationRoles: boolean;
+  enableRoulette: boolean;
   selectedQuestionCategories: string[];
   onQuestionCategoriesChange: (categories: string[]) => void;
   customQuestionCategories: CustomQuestionCategory[];
   onCustomQuestionCategoriesChange: (cats: CustomQuestionCategory[]) => void;
   customLocations: CustomLocation[];
   onCustomLocationsChange: (locs: CustomLocation[]) => void;
-  onOptionChange: (key: 'allowRepeats' | 'showHintToImposter' | 'hapticFeedback' | 'showLocationRoles' | 'enableJokers', value: boolean) => void;
+  onOptionChange: (key: 'allowRepeats' | 'showHintToImposter' | 'hapticFeedback' | 'showLocationRoles' | 'enableJokers' | 'enableRoulette', value: boolean) => void;
   onGameModeChange: (mode: GameMode) => void;
   onPlayerCountChange: (count: number) => void;
   onImposterRangeChange: (min: number, max: number) => void;
@@ -37,6 +38,8 @@ interface HomeScreenProps {
   onCategoryToggle: (categoryId: string) => void;
   onCategoriesChange: (categories: string[]) => void;
   onCustomCategoriesChange: (categories: CustomCategory[]) => void;
+  championshipTarget: number;
+  onChampionshipTargetChange: (target: number) => void;
   onStartGame: () => void;
 }
 
@@ -55,6 +58,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   showHintToImposter,
   hapticFeedback,
   showLocationRoles,
+  enableRoulette,
   selectedQuestionCategories,
   onQuestionCategoriesChange,
   customQuestionCategories,
@@ -70,12 +74,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onCategoryToggle,
   onCategoriesChange,
   onCustomCategoriesChange,
+  championshipTarget,
+  onChampionshipTargetChange,
   onStartGame,
 }) => {
   const { isDark, toggleTheme, darkToggleAvailable, theme, themes } = useTheme();
   const currentTheme = themes.find(t => t.id === theme);
   const isSpy = gameMode === GameMode.SPY;
   const isQuestions = gameMode === GameMode.QUESTIONS;
+  const isChampionship = gameMode === GameMode.CHAMPIONSHIP;
   // Coringa é uma opção do modo Clássico (desativada por padrão).
   const jokersActive = gameMode === GameMode.CLASSIC && enableJokers;
   // Espião e Perguntas usam suas próprias listas (locais/perguntas), não as categorias de palavras.
@@ -238,6 +245,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               >
                 Perguntas
               </button>
+              <button
+                onClick={() => onGameModeChange(GameMode.CHAMPIONSHIP)}
+                className={`col-span-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  gameMode === GameMode.CHAMPIONSHIP
+                    ? 'text-white shadow-sm'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 active:bg-gray-100 dark:active:bg-gray-600'
+                }`}
+                style={gameMode === GameMode.CHAMPIONSHIP ? { backgroundColor: 'var(--accent)' } : {}}
+              >
+                Campeonato
+              </button>
             </div>
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-200">
@@ -253,6 +271,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 {gameMode === GameMode.QUESTIONS && (
                   <>Cada um responde uma pergunta no celular. O impostor recebe <strong>outra pergunta da mesma categoria</strong>. No fim, as respostas aparecem e vocês apontam o impostor.</>
                 )}
+                {gameMode === GameMode.CHAMPIONSHIP && (
+                  <>Vários rounds valendo <strong>pontos</strong>: vencer como impostor dá +3, como inocente +1, e cada <strong>missão secreta</strong> cumprida +1. Primeiro a bater a meta é o campeão.</>
+                )}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 italic transition-colors duration-200">
                 Para mais detalhes, clique no botão da esquerda em cima.
@@ -260,6 +281,46 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Championship Target Section */}
+        {isChampionship && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <div className="px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3h14M6 3v5a6 6 0 006 6 6 6 0 006-6V3M6 8H4a2 2 0 01-2-2V5a2 2 0 012-2m12 5h2a2 2 0 002-2V5a2 2 0 00-2-2M12 14v4m-4 3h8m-8 0a4 4 0 014-3 4 4 0 014 3" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Meta de pontos</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Primeiro a chegar em {championshipTarget} vence</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-1 transition-colors duration-200">
+                <button
+                  onClick={() => { if (championshipTarget > 3) onChampionshipTargetChange(championshipTarget - 1); }}
+                  disabled={championshipTarget <= 3}
+                  className="w-6 h-6 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                  </svg>
+                </button>
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 min-w-[2rem] text-center transition-colors duration-200">{championshipTarget}</span>
+                <button
+                  onClick={() => { if (championshipTarget < 50) onChampionshipTargetChange(championshipTarget + 1); }}
+                  disabled={championshipTarget >= 50}
+                  className="w-6 h-6 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Player Count Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
@@ -1137,6 +1198,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                     aria-label="Ativar coringa"
                   >
                     <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${enableJokers ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+
+              {/* Roleta (opção do Clássico e do Cegas) */}
+              {(gameMode === GameMode.CLASSIC || gameMode === GameMode.FAKE) && (
+                <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex-1 pr-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-200">Roleta de regras</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Sorteia uma regra maluca a cada rodada (falar só uma palavra, sussurrando, sem verbo...).</p>
+                  </div>
+                  <button
+                    onClick={() => onOptionChange('enableRoulette', !enableRoulette)}
+                    className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 focus:outline-none ${enableRoulette ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    style={enableRoulette ? { backgroundColor: 'var(--accent)' } : {}}
+                    role="switch"
+                    aria-checked={enableRoulette}
+                    aria-label="Ativar roleta de regras"
+                  >
+                    <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${enableRoulette ? 'translate-x-5' : 'translate-x-0'}`} />
                   </button>
                 </div>
               )}
