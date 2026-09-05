@@ -95,6 +95,18 @@ async function updateRollup(
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    await ingest(req, res);
+  } catch (err) {
+    // A telemetria nunca deve derrubar a função. Com ?debug=1 a mensagem
+    // volta na resposta, para diagnosticar sem abrir os logs da Vercel.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("track falhou:", message);
+    res.status(500).json({ error: req.query.debug ? message : "falha ao registrar" });
+  }
+}
+
+async function ingest(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'método não permitido' });
     return;

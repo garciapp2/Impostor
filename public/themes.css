@@ -29,6 +29,11 @@
 /* Texto sobre a cor de destaque (elementos com background var(--accent)). */
 [data-theme] [style*="var(--accent)"] { color: var(--accent-ink, #fff) !important; }
 
+/* A regra acima casa por string no style inline, então também pegaria quem usa
+   o accent como COR DE TEXTO e o deixaria branco (invisível em fundo claro).
+   Para texto na cor de destaque use esta classe em vez de style inline. */
+.accent-text { color: var(--accent); }
+
 /* =====================================================================
    1) EDITORIAL / BRUTALIST  📰
    Papel de jornal, preto absoluto, uma cor de choque, cantos retos,

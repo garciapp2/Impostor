@@ -28,7 +28,9 @@ export async function writeJson(pathname: string, data: unknown): Promise<void> 
     contentType: 'application/json',
     addRandomSuffix: false,
     allowOverwrite: true,
-    cacheControlMaxAge: 0,
+    // O mínimo aceito pelo Blob é 60s; 0 faz o put() lançar. A leitura sempre
+    // usa cache-buster na query, então isso não deixa o painel defasado.
+    cacheControlMaxAge: 60,
   });
 }
 

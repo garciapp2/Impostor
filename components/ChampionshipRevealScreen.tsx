@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import type { Player, RoundOutcome, DiaryEntry } from '../types';
+import GameStartedScreen from './GameStartedScreen';
 
 interface ChampionshipRevealScreenProps {
   players: Player[];
@@ -72,35 +73,14 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
 
   const renderStep = () => {
     // ---------- INTRO ----------
+    // Mesma tela dos outros modos, com a rodada como sobretítulo.
     if (step === 'intro') {
       return (
-        <div className="flex flex-col h-full px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-          <div className="flex-1 flex flex-col overflow-y-auto py-6">
-            <div className="my-auto w-full">
-              <div className="text-center mb-6">
-                <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: ACCENT }}>Campeonato · Rodada {round}</p>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">Peguem o impostor</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Conversem, discutam e decidam. Depois revelem para pontuar.</p>
-              </div>
-              {firstPlayerName && (
-                <div className="w-full max-w-sm mx-auto mb-4 rounded-3xl px-5 py-4 text-center text-white shadow-lg champ-pop" style={{ backgroundColor: ACCENT }}>
-                  <p className="text-xs uppercase tracking-widest opacity-90 mb-1">Começa falando</p>
-                  <p className="text-2xl font-bold leading-tight">{firstPlayerName}</p>
-                </div>
-              )}
-              <MiniBoard ranking={ranking} target={target} />
-            </div>
-          </div>
-          <div className="pb-6 w-full max-w-sm mx-auto">
-            <button
-              onClick={() => { vibrate(20); setStep('reveal'); }}
-              className="w-full py-4 rounded-2xl font-semibold text-white shadow-lg active:scale-98 transition-all"
-              style={{ backgroundColor: ACCENT }}
-            >
-              Revelar Resultado
-            </button>
-          </div>
-        </div>
+        <GameStartedScreen
+          firstPlayerName={firstPlayerName}
+          eyebrow={`Campeonato · Rodada ${round}`}
+          onContinue={() => { vibrate(20); setStep('reveal'); }}
+        />
       );
     }
 
@@ -198,7 +178,7 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
                     </div>
                     <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center border-2 ${on ? 'bg-white border-white' : 'border-gray-300 dark:border-gray-600'}`}>
                       {on && (
-                        <svg className="w-4 h-4" style={{ color: ACCENT }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -235,7 +215,7 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 3h14M6 3v5a6 6 0 006 6 6 6 0 006-6V3M6 8H4a2 2 0 01-2-2V5a2 2 0 012-2m12 5h2a2 2 0 002-2V5a2 2 0 00-2-2M12 14v4m-4 3h8m-8 0a4 4 0 014-3 4 4 0 014 3" />
                 </svg>
               </div>
-              <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: ACCENT }}>Campeão do jogo</p>
+              <p className="text-xs uppercase tracking-widest font-semibold accent-text">Campeão do jogo</p>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">
                 {champions.map(c => c.name).join(' & ')}
               </h1>
@@ -243,7 +223,7 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
             </div>
           ) : (
             <div className="text-center mb-5">
-              <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: ACCENT }}>Placar · Rodada {round}</p>
+              <p className="text-xs uppercase tracking-widest font-semibold accent-text">Placar · Rodada {round}</p>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">Como estamos indo</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Meta: {target} pontos</p>
             </div>
@@ -273,7 +253,7 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
                       {r.delta > 0 && (
                         <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white champ-pop" style={{ backgroundColor: ACCENT }}>+{r.delta}</span>
                       )}
-                      <span className="font-bold text-lg" style={{ color: ACCENT }}>{r.score}</span>
+                      <span className="font-bold text-lg accent-text">{r.score}</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">/{target}</span>
                     </span>
                   </div>
@@ -357,31 +337,6 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
   };
 
   return <div key={step} className="h-full champ-enter">{renderStep()}</div>;
-};
-
-// Mini-placar compacto usado na tela de intro.
-const MiniBoard: React.FC<{ ranking: { name: string; score: number; delta: number }[]; target: number }> = ({ ranking, target }) => {
-  const top = ranking[0]?.score ?? 0;
-  return (
-    <div className="w-full max-w-sm mx-auto rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
-      <p className="text-xs uppercase tracking-widest font-semibold text-gray-500 dark:text-gray-400 mb-3">Placar · meta {target}</p>
-      <div className="space-y-2">
-        {ranking.map((r, idx) => (
-          <div key={r.name} className="flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm w-6 text-center flex-shrink-0 text-gray-400 dark:text-gray-500">{idx + 1}</span>
-              <span className={`truncate ${r.score === top && r.score > 0 ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>{r.name}</span>
-            </div>
-            <span className="flex items-baseline gap-1.5 flex-shrink-0">
-              {r.delta > 0 && <span className="text-[11px] font-bold" style={{ color: ACCENT }}>+{r.delta}</span>}
-              <span className="font-bold" style={{ color: ACCENT }}>{r.score}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">/{target}</span>
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 };
 
 // Animações da tela de Campeonato (injetadas uma vez).

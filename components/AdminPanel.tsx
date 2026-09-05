@@ -16,6 +16,25 @@ const api = async <T,>(path: string, init?: RequestInit): Promise<T> => {
 
 const today = (): string => new Date().toISOString().slice(0, 10);
 
+/** Data de N dias atrás, em YYYY-MM-DD. */
+const daysAgo = (n: number): string => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+
+// Atalhos de período. `from: ''` significa sem limite inferior (todo o histórico).
+const RANGE_PRESETS: { label: string; from: string }[] = [
+  { label: 'Hoje', from: today() },
+  { label: '7 dias', from: daysAgo(6) },
+  { label: '30 dias', from: daysAgo(29) },
+  { label: 'Tudo', from: '' },
+];
+
+/** Rótulo legível de um período, para o cabeçalho da lista. */
+const rangeLabel = (from: string, to: string): string => {
+  const br = (d: string) => d.split('-').reverse().join('/');
+  if (!from) return `até ${br(to)}`;
+  if (from === to) return br(from);
+  return `${br(from)} – ${br(to)}`;
+};
+
 // Object.entries resolve para um overload que devolve `unknown` no grafo de
 // tipos do React; este helper devolve os pares já tipados e ordenados.
 const sortedEntries = (map: Record<string, number>): [string, number][] =>
@@ -253,7 +272,9 @@ const AdminPanel: React.FC = () => {
   const [liveSessions, setLiveSessions] = useState<SessionRecord[]>([]);
   const [historySessions, setHistorySessions] = useState<SessionRecord[]>([]);
   const [days, setDays] = useState<string[]>([]);
-  const [date, setDate] = useState(today());
+  const [from, setFrom] = useState(daysAgo(6));
+  const [to, setTo] = useState(today());
+  const [truncated, setTruncated] = useState(false);
   const [rollup, setRollup] = useState<Rollup | null>(null);
 
   useEffect(() => {
@@ -271,9 +292,14 @@ const AdminPanel: React.FC = () => {
         const r = await api<{ sessions: SessionRecord[] }>('/api/admin/live');
         setLiveSessions(r.sessions);
       } else if (tab === 'history') {
-        const r = await api<{ days: string[]; sessions: SessionRecord[] }>(`/api/admin/sessions?date=${date}`);
+        const qs = new URLSearchParams({ to });
+        if (from) qs.set('from', from);
+        const r = await api<{ days: string[]; sessions: SessionRecord[]; truncated: boolean }>(
+          `/api/admin/sessions?${qs.toString()}`
+        );
         setDays(r.days);
         setHistorySessions(r.sessions);
+        setTruncated(r.truncated);
       } else {
         const r = await api<{ rollup: Rollup; days: string[] }>('/api/admin/summary');
         setRollup(r.rollup);
@@ -286,7 +312,7 @@ const AdminPanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [authed, tab, date]);
+  }, [authed, tab, from, to]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -373,31 +399,59 @@ const AdminPanel: React.FC = () => {
 
         {tab === 'history' && (
           <>
-            <div className="flex items-center gap-2 px-1">
+            <div className="flex flex-wrap gap-1.5 px-1">
+              {RANGE_PRESETS.map(preset => {
+                const active = from === preset.from && to === today();
+                return (
+                  <button
+                    key={preset.label}
+                    onClick={() => { setFrom(preset.from); setTo(today()); }}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+                      active ? 'text-white' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800'
+                    }`}
+                    style={active ? { backgroundColor: ACCENT } : {}}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2 px-1 text-sm">
+              <label className="text-gray-500 dark:text-gray-400">De</label>
               <input
                 type="date"
-                value={date}
-                max={today()}
-                onChange={e => setDate(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-gray-100"
+                value={from}
+                max={to}
+                onChange={e => setFrom(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100"
               />
-              {days.length > 0 && (
-                <select
-                  value={days.includes(date) ? date : ''}
-                  onChange={e => e.target.value && setDate(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Dias com dados…</option>
-                  {days.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-              )}
+              <label className="text-gray-500 dark:text-gray-400">até</label>
+              <input
+                type="date"
+                value={to}
+                min={from || undefined}
+                max={today()}
+                onChange={e => setTo(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100"
+              />
             </div>
+
             <p className="text-sm text-gray-500 dark:text-gray-400 px-1">
-              {historySessions.length} {historySessions.length === 1 ? 'sessão' : 'sessões'} ·{' '}
+              {rangeLabel(from, to)} · {historySessions.length}{' '}
+              {historySessions.length === 1 ? 'sessão' : 'sessões'} ·{' '}
               {historySessions.reduce((n, s) => n + s.games.length, 0)} partidas
+              {days.length > 0 && ` · ${days.length} dias com dados`}
             </p>
+
+            {truncated && (
+              <p className="text-xs px-1 text-amber-600 dark:text-amber-400">
+                Período muito longo: mostrando só os 120 dias mais recentes.
+              </p>
+            )}
+
             {historySessions.length === 0 && !loading && (
-              <p className="text-center text-gray-400 dark:text-gray-500 py-12">Nada neste dia.</p>
+              <p className="text-center text-gray-400 dark:text-gray-500 py-12">Nada neste período.</p>
             )}
             {historySessions.map(s => <SessionCard key={s.sessionId} session={s} live={false} />)}
           </>
