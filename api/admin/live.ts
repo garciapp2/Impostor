@@ -2,9 +2,9 @@
 // perder sessões que atravessaram a meia-noite.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin } from '../_lib/auth';
-import { readAllUnder, SESSION_PREFIX } from '../_lib/blob';
-import type { SessionRecord } from '../_lib/types';
+import { requireAdmin } from '../_lib/auth.js';
+import { readAllUnder, SESSION_PREFIX } from '../_lib/blob.js';
+import type { SessionRecord } from '../_lib/types.js';
 
 const WINDOW_MS = 5 * 60_000;
 

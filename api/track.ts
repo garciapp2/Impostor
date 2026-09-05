@@ -4,10 +4,10 @@
 // aparelho dono escreve nele — por isso não há corrida de escrita.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { clientIp, hashIp } from './_lib/auth';
-import { readJson, writeJson, sessionPath, ROLLUP_PATH } from './_lib/blob';
-import { EMPTY_ROLLUP } from './_lib/types';
-import type { SessionRecord, GameRecord, Rollup, DeviceInfo, GeoInfo } from './_lib/types';
+import { clientIp, hashIp } from './_lib/auth.js';
+import { readJson, writeJson, sessionPath, ROLLUP_PATH } from './_lib/blob.js';
+import { EMPTY_ROLLUP } from './_lib/types.js';
+import type { SessionRecord, GameRecord, Rollup, DeviceInfo, GeoInfo } from './_lib/types.js';
 
 const UUID_RE = /^[0-9a-f-]{8,64}$/i;
 

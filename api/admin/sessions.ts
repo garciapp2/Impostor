@@ -1,9 +1,9 @@
 // Sessões de um dia específico, mais recentes primeiro.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin } from '../_lib/auth';
-import { readAllUnder, listDays, SESSION_PREFIX } from '../_lib/blob';
-import type { SessionRecord } from '../_lib/types';
+import { requireAdmin } from '../_lib/auth.js';
+import { readAllUnder, listDays, SESSION_PREFIX } from '../_lib/blob.js';
+import type { SessionRecord } from '../_lib/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAdmin(req, res)) return;

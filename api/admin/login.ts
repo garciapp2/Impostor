@@ -1,8 +1,8 @@
 // Login único do painel. Credencial em env vars; bloqueio por IP após falhas.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyPassword, issueCookie, clientIp, hashIp } from '../_lib/auth';
-import { readJson, writeJson, ATTEMPTS_PATH } from '../_lib/blob';
+import { verifyPassword, issueCookie, clientIp, hashIp } from '../_lib/auth.js';
+import { readJson, writeJson, ATTEMPTS_PATH } from '../_lib/blob.js';
 
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60_000;
