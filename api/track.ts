@@ -4,12 +4,15 @@
 // aparelho dono escreve nele — por isso não há corrida de escrita.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { clientIp, hashIp } from './_lib/auth.js';
+import { clientIp, hashIp, isAuthenticated } from './_lib/auth.js';
 import { readJson, writeJson, sessionPath, ROLLUP_PATH, blobReady, BLOB_MISSING } from './_lib/blob.js';
 import { EMPTY_ROLLUP } from './_lib/types.js';
 import type { SessionRecord, GameRecord, Rollup, DeviceInfo, GeoInfo } from './_lib/types.js';
 
 const UUID_RE = /^[0-9a-f-]{8,64}$/i;
+
+// Teto de partidas guardadas por sessão.
+const MAX_GAMES_PER_SESSION = 200;
 
 function day(iso: string): string {
   return iso.slice(0, 10);
@@ -54,6 +57,18 @@ function deviceFrom(raw: any, userAgent: string): DeviceInfo {
   };
 }
 
+/** Placar vindo do cliente: só pares nome→número, com teto de jogadores.
+ *  O endpoint é público, então nada entra no blob sem passar por aqui. */
+function scoresFrom(v: unknown): Record<string, number> | undefined {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+  const out: Record<string, number> = {};
+  for (const key of Object.keys(v as object).slice(0, 40)) {
+    const n = Number((v as Record<string, unknown>)[key]);
+    if (Number.isFinite(n)) out[str(key, 60)] = n;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 function bump(map: Record<string, number>, key: string, by = 1): void {
   if (!key) return;
   map[key] = (map[key] ?? 0) + by;
@@ -78,7 +93,7 @@ async function updateRollup(
     bump(r.browsers, session.device.browser);
     bump(r.os, session.device.os);
     if (!r.knownDevices.includes(session.deviceId)) {
-      r.knownDevices = [...r.knownDevices, session.deviceId].slice(-20000);
+      r.knownDevices = [...r.knownDevices, session.deviceId].slice(-5000);
     }
     r.totalDevices = r.knownDevices.length;
   }
@@ -98,11 +113,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await ingest(req, res);
   } catch (err) {
-    // A telemetria nunca deve derrubar a função. Com ?debug=1 a mensagem
-    // volta na resposta, para diagnosticar sem abrir os logs da Vercel.
+    // A telemetria nunca deve derrubar a função. A mensagem real só volta na
+    // resposta para quem está logado no painel (?debug=1); este endpoint é
+    // público, e detalhe de erro interno não deve vazar para qualquer um.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("track falhou:", message);
-    res.status(500).json({ error: req.query.debug ? message : "falha ao registrar" });
+    console.error('track falhou:', message);
+    const canSeeDetail = Boolean(req.query.debug) && isAuthenticated(req);
+    res.status(500).json({ error: canSeeDetail ? message : 'falha ao registrar' });
   }
 }
 
@@ -160,6 +177,13 @@ async function ingest(req: VercelRequest, res: VercelResponse) {
   let finishedGame: GameRecord | null = null;
   const lastGame = session.games[session.games.length - 1];
 
+  // Teto de partidas por sessão: impede que uma sessão (ou alguém abusando do
+  // endpoint público) faça um blob crescer sem limite.
+  if (event === 'game_start' && session.games.length >= MAX_GAMES_PER_SESSION) {
+    res.status(200).json({ ok: true, startDay, note: 'limite de partidas por sessão atingido' });
+    return;
+  }
+
   if (event === 'game_start') {
     session.games.push({
       id: `${session.games.length + 1}`,
@@ -177,11 +201,13 @@ async function ingest(req: VercelRequest, res: VercelResponse) {
     session.screen = 'game';
   } else if (event === 'round_end' && lastGame) {
     lastGame.rounds = Number(payload.rounds) || lastGame.rounds + 1;
-    if (payload.scores) lastGame.finalScores = payload.scores;
+    const s1 = scoresFrom(payload.scores);
+    if (s1) lastGame.finalScores = s1;
   } else if (event === 'game_end' && lastGame && !lastGame.endedAt) {
     lastGame.endedAt = now;
     if (payload.rounds) lastGame.rounds = Number(payload.rounds);
-    if (payload.scores) lastGame.finalScores = payload.scores;
+    const s2 = scoresFrom(payload.scores);
+    if (s2) lastGame.finalScores = s2;
     finishedGame = lastGame;
     session.screen = 'home';
   }

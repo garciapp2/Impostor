@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { GameState, Player, GameConfig, GameMode, CustomCategory, CustomQuestionCategory, CustomLocation, QuestionAnswer, RoundOutcome, DiaryEntry } from './types';
 import { getAllWords, getCategoryForWord } from './constants/words';
 import { LOCATIONS, getLocationByName } from './constants/locations';
@@ -148,6 +148,11 @@ const App: React.FC = () => {
   // Pontos ganhos na última rodada pontuada, por jogador (exibidos como "+3" no placar).
   const [champLastDelta, setChampLastDelta] = useState<Record<string, number>>({});
 
+  // Nº de impostores realmente sorteado na rodada (imposterMin..imposterMax).
+  const drawnImpostersRef = useRef(0);
+  // Rodadas jogadas na sessão atual, em qualquer modo.
+  const roundsPlayedRef = useRef(1);
+
   // Telemetria anônima: liga uma vez no boot.
   useEffect(() => {
     initTracking();
@@ -172,19 +177,7 @@ const App: React.FC = () => {
       setChampRound(1);
       setChampLastDelta({});
     }
-    const { theme, darkMode } = currentTheme();
-    trackGameStart({
-      mode: gameConfig.gameMode,
-      players: gameConfig.playerNames,
-      playerCount: gameConfig.playerCount,
-      imposters: gameConfig.imposterMax,
-      theme,
-      darkMode,
-      categories: gameConfig.gameMode === GameMode.QUESTIONS
-        ? gameConfig.selectedQuestionCategories
-        : gameConfig.selectedCategories,
-      target: gameConfig.gameMode === GameMode.CHAMPIONSHIP ? gameConfig.championshipTarget : undefined,
-    });
+    roundsPlayedRef.current = 1;
     setupNewRound(
       gameConfig.gameMode,
       gameConfig.playerNames,
@@ -198,6 +191,20 @@ const App: React.FC = () => {
       gameConfig.selectedQuestionCategories,
       gameConfig.enableRoulette
     );
+    // Depois do sorteio: setupNewRound preencheu o nº real de impostores.
+    const { theme, darkMode } = currentTheme();
+    trackGameStart({
+      mode: gameConfig.gameMode,
+      players: gameConfig.playerNames,
+      playerCount: gameConfig.playerCount,
+      imposters: drawnImpostersRef.current,
+      theme,
+      darkMode,
+      categories: gameConfig.gameMode === GameMode.QUESTIONS
+        ? gameConfig.selectedQuestionCategories
+        : gameConfig.selectedCategories,
+      target: gameConfig.gameMode === GameMode.CHAMPIONSHIP ? gameConfig.championshipTarget : undefined,
+    });
     setTimeout(() => {
       setGameState(GameState.GAME);
       setTimeout(() => setIsTransitioning(false), 10);
@@ -288,6 +295,8 @@ const App: React.FC = () => {
         imposterIndices.add(randomIndex);
       }
     }
+    // Guardado para a telemetria: o sorteado, não o teto configurado.
+    drawnImpostersRef.current = imposterIndices.size;
 
     // Select random jokers within range (Coringa option, only in Clássico)
     const jokerIndices = new Set<number>();
@@ -392,6 +401,7 @@ const App: React.FC = () => {
 
   const handleNewRound = () => {
     setIsTransitioning(true);
+    roundsPlayedRef.current += 1;
     if (gameConfig.gameMode === GameMode.CHAMPIONSHIP) {
       setChampRound(r => r + 1);
       setChampLastDelta({});
@@ -421,7 +431,7 @@ const App: React.FC = () => {
 
   const handleBackToStart = () => {
     const isChampionship = gameConfig.gameMode === GameMode.CHAMPIONSHIP;
-    trackGameEnd(isChampionship ? champRound : 1, isChampionship ? champScores : undefined);
+    trackGameEnd(roundsPlayedRef.current, isChampionship ? champScores : undefined);
     setIsTransitioning(true);
     setTimeout(() => {
       setPlayers([]);

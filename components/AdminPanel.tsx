@@ -19,8 +19,10 @@ const today = (): string => new Date().toISOString().slice(0, 10);
 /** Data de N dias atrás, em YYYY-MM-DD. */
 const daysAgo = (n: number): string => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
 
-// Atalhos de período. `from: ''` significa sem limite inferior (todo o histórico).
-const RANGE_PRESETS: { label: string; from: string }[] = [
+// Atalhos de período. `from: ''` significa sem limite inferior (todo o
+// histórico). É função, não constante: um painel aberto atravessando a
+// meia-noite precisa que "Hoje" continue sendo hoje.
+const rangePresets = (): { label: string; from: string }[] => [
   { label: 'Hoje', from: today() },
   { label: '7 dias', from: daysAgo(6) },
   { label: '30 dias', from: daysAgo(29) },
@@ -400,7 +402,7 @@ const AdminPanel: React.FC = () => {
         {tab === 'history' && (
           <>
             <div className="flex flex-wrap gap-1.5 px-1">
-              {RANGE_PRESETS.map(preset => {
+              {rangePresets().map(preset => {
                 const active = from === preset.from && to === today();
                 return (
                   <button

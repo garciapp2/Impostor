@@ -42,9 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!ok) {
     const fails = (entry?.until && entry.until > now ? entry.fails : entry?.fails ?? 0) + 1;
     attempts[key] = { fails, until: fails >= MAX_FAILS ? now + LOCK_MS : 0 };
-    // Poda entradas velhas para o arquivo não crescer sem limite.
-    for (const [k, v] of Object.entries(attempts)) {
-      if (v.until === 0 && v.fails < MAX_FAILS && k !== key) delete attempts[k];
+    // Poda: só ficam os bloqueios ainda ativos e a entrada atual. Sem isto o
+    // arquivo cresceria para sempre, já que bloqueios expirados nunca saíam.
+    for (const k of Object.keys(attempts)) {
+      if (k !== key && attempts[k].until <= now) delete attempts[k];
     }
     try { await writeJson(ATTEMPTS_PATH, attempts); } catch { /* não bloqueia a resposta */ }
     res.status(401).json({ error: 'e-mail ou senha incorretos' });

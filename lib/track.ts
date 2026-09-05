@@ -87,7 +87,6 @@ let sessionId = '';
 let startDay = '';
 let device: ReturnType<typeof collectDevice> | null = null;
 let started = false;
-let heartbeatTimer: number | undefined;
 
 const send = (event: TrackEvent, payload: Record<string, unknown> = {}): void => {
   if (!started) return;
@@ -107,8 +106,9 @@ export const initTracking = (): void => {
   try {
     deviceId = persisted(window.localStorage, DEVICE_KEY);
     sessionId = persisted(window.sessionStorage, SESSION_KEY);
-    startDay = persisted(window.sessionStorage, START_DAY_KEY);
-    // A chave do dia guarda um uuid na primeira vez; troca pela data real.
+    // O dia em que a sessão começou fixa em qual blob ela vive, para que uma
+    // partida atravessando a meia-noite não vire duas sessões.
+    startDay = window.sessionStorage.getItem(START_DAY_KEY) ?? '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDay)) {
       startDay = new Date().toISOString().slice(0, 10);
       window.sessionStorage.setItem(START_DAY_KEY, startDay);
@@ -124,13 +124,8 @@ export const initTracking = (): void => {
   const beat = () => {
     if (document.visibilityState === 'visible') send('heartbeat');
   };
-  heartbeatTimer = window.setInterval(beat, HEARTBEAT_MS);
+  window.setInterval(beat, HEARTBEAT_MS);
   document.addEventListener('visibilitychange', beat);
-};
-
-export const stopTracking = (): void => {
-  if (heartbeatTimer) window.clearInterval(heartbeatTimer);
-  heartbeatTimer = undefined;
 };
 
 export interface GameStartInfo {
@@ -152,4 +147,3 @@ export const trackRoundEnd = (rounds: number, scores?: Record<string, number>): 
 export const trackGameEnd = (rounds: number, scores?: Record<string, number>): void =>
   send('game_end', { rounds, scores, screen: 'home' });
 
-export const trackScreen = (screen: string): void => send('heartbeat', { screen });
