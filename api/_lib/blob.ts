@@ -1,9 +1,10 @@
 // Wrapper fino sobre o Vercel Blob: ler/escrever JSON por caminho.
 //
-// Blobs sobrescritos ficam em cache na CDN, então gravamos com
-// cacheControlMaxAge 0 e lemos sempre com cache-buster.
+// O store é PRIVADO: os arquivos guardam nomes de jogadores e hash de IP, e
+// não devem ser buscáveis por URL. Por isso gravamos com access 'private' e
+// lemos com get(), que autentica pelo BLOB_READ_WRITE_TOKEN.
 
-import { put, list } from '@vercel/blob';
+import { put, list, get } from '@vercel/blob';
 
 export const SESSION_PREFIX = 'sessions/';
 export const ROLLUP_PATH = 'stats/rollup.json';
@@ -24,37 +25,22 @@ export function sessionPath(day: string, sessionId: string): string {
 
 export async function writeJson(pathname: string, data: unknown): Promise<void> {
   await put(pathname, JSON.stringify(data), {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     addRandomSuffix: false,
     allowOverwrite: true,
-    // O mínimo aceito pelo Blob é 60s; 0 faz o put() lançar. A leitura sempre
-    // usa cache-buster na query, então isso não deixa o painel defasado.
-    cacheControlMaxAge: 60,
   });
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
-  const bust = url.includes('?') ? '&' : '?';
-  const res = await fetch(`${url}${bust}_=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  try {
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
-}
-
-/** Lê um JSON pelo caminho lógico. Devolve null se não existir. */
+/** Lê um JSON pelo caminho lógico. Devolve null se não existir.
+ *  `useCache: false` garante ler a versão recém-gravada, não a do CDN. */
 export async function readJson<T>(pathname: string): Promise<T | null> {
   try {
-    // list() com prefixo exato em vez de head(): head() só aceita pathname
-    // em versões recentes do SDK, list() funciona em todas.
-    const { blobs } = await list({ prefix: pathname, limit: 10 });
-    const match = blobs.find(b => b.pathname === pathname);
-    if (!match) return null;
-    return await fetchJson<T>(match.url);
+    const result = await get(pathname, { access: 'private', useCache: false });
+    if (!result || result.statusCode !== 200) return null;
+    return (await new Response(result.stream).json()) as T;
   } catch {
+    // get() lança quando o caminho não existe.
     return null;
   }
 }
@@ -62,7 +48,7 @@ export async function readJson<T>(pathname: string): Promise<T | null> {
 /** Lê todos os JSONs sob um prefixo, em paralelo. */
 export async function readAllUnder<T>(prefix: string, limit = 1000): Promise<T[]> {
   const { blobs } = await list({ prefix, limit });
-  const results = await Promise.all(blobs.map(b => fetchJson<T>(b.url)));
+  const results = await Promise.all(blobs.map(b => readJson<T>(b.pathname)));
   return results.filter((r): r is Awaited<T> => r !== null) as T[];
 }
 
