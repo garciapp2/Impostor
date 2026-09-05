@@ -8,6 +8,7 @@ import { drawRouletteRule } from './constants/roulette';
 import { drawMissions } from './constants/missions';
 import { getCardColors } from './components/Card';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { initTracking, trackGameStart, trackRoundEnd, trackGameEnd } from './lib/track';
 
 import HomeScreen from './components/HomeScreen';
 import GameScreen from './components/GameScreen';
@@ -144,6 +145,21 @@ const App: React.FC = () => {
   const [champScores, setChampScores] = useState<Record<string, number>>({});
   const [champDiary, setChampDiary] = useState<DiaryEntry[]>([]);
   const [champRound, setChampRound] = useState<number>(1);
+  // Pontos ganhos na última rodada pontuada, por jogador (exibidos como "+3" no placar).
+  const [champLastDelta, setChampLastDelta] = useState<Record<string, number>>({});
+
+  // Telemetria anônima: liga uma vez no boot.
+  useEffect(() => {
+    initTracking();
+  }, []);
+
+  const currentTheme = () => {
+    if (typeof document === 'undefined') return { theme: 'classic', darkMode: false };
+    return {
+      theme: document.documentElement.getAttribute('data-theme') ?? 'classic',
+      darkMode: document.documentElement.classList.contains('dark'),
+    };
+  };
 
   const handleStartGame = () => {
     setIsTransitioning(true);
@@ -154,7 +170,21 @@ const App: React.FC = () => {
       setChampScores(initialScores);
       setChampDiary([]);
       setChampRound(1);
+      setChampLastDelta({});
     }
+    const { theme, darkMode } = currentTheme();
+    trackGameStart({
+      mode: gameConfig.gameMode,
+      players: gameConfig.playerNames,
+      playerCount: gameConfig.playerCount,
+      imposters: gameConfig.imposterMax,
+      theme,
+      darkMode,
+      categories: gameConfig.gameMode === GameMode.QUESTIONS
+        ? gameConfig.selectedQuestionCategories
+        : gameConfig.selectedCategories,
+      target: gameConfig.gameMode === GameMode.CHAMPIONSHIP ? gameConfig.championshipTarget : undefined,
+    });
     setupNewRound(
       gameConfig.gameMode,
       gameConfig.playerNames,
@@ -338,14 +368,19 @@ const App: React.FC = () => {
   const handleScoreRound = (outcome: RoundOutcome, missionAchievers: string[]) => {
     const imposterNames = players.filter(p => p.isImposter).map(p => p.name);
     const innocentNames = players.filter(p => !p.isImposter).map(p => p.name);
-    setChampScores(prev => {
-      const next = { ...prev };
-      const winners = outcome === 'imposters' ? imposterNames : innocentNames;
-      const pointsPerWinner = outcome === 'imposters' ? 3 : 1;
-      winners.forEach(n => { next[n] = (next[n] || 0) + pointsPerWinner; });
-      missionAchievers.forEach(n => { next[n] = (next[n] || 0) + 1; });
-      return next;
-    });
+
+    // Ganho desta rodada, calculado antes de somar ao total.
+    const delta: Record<string, number> = {};
+    const winners = outcome === 'imposters' ? imposterNames : innocentNames;
+    const pointsPerWinner = outcome === 'imposters' ? 3 : 1;
+    winners.forEach(n => { delta[n] = (delta[n] || 0) + pointsPerWinner; });
+    missionAchievers.forEach(n => { delta[n] = (delta[n] || 0) + 1; });
+    setChampLastDelta(delta);
+
+    const nextScores = { ...champScores };
+    Object.entries(delta).forEach(([n, pts]) => { nextScores[n] = (nextScores[n] || 0) + pts; });
+    setChampScores(nextScores);
+    trackRoundEnd(champRound, nextScores);
     setChampDiary(prev => [...prev, {
       round: champRound,
       secretWord,
@@ -359,6 +394,7 @@ const App: React.FC = () => {
     setIsTransitioning(true);
     if (gameConfig.gameMode === GameMode.CHAMPIONSHIP) {
       setChampRound(r => r + 1);
+      setChampLastDelta({});
     }
     // Aguardar a animação de saída terminar antes de atualizar os dados
     setTimeout(() => {
@@ -384,6 +420,8 @@ const App: React.FC = () => {
   };
 
   const handleBackToStart = () => {
+    const isChampionship = gameConfig.gameMode === GameMode.CHAMPIONSHIP;
+    trackGameEnd(isChampionship ? champRound : 1, isChampionship ? champScores : undefined);
     setIsTransitioning(true);
     setTimeout(() => {
       setPlayers([]);
@@ -549,6 +587,8 @@ const App: React.FC = () => {
               round={champRound}
               target={gameConfig.championshipTarget}
               scores={champScores}
+              lastRoundDelta={champLastDelta}
+              firstPlayerName={players.length > 0 && firstPlayerIndex < players.length ? players[firstPlayerIndex].name : ''}
               diary={champDiary}
               hapticFeedback={gameConfig.hapticFeedback}
               onScoreRound={handleScoreRound}

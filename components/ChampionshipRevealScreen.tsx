@@ -8,6 +8,10 @@ interface ChampionshipRevealScreenProps {
   round: number;
   target: number;
   scores: Record<string, number>;
+  /** Pontos ganhos na rodada recém-pontuada, por jogador. */
+  lastRoundDelta: Record<string, number>;
+  /** Quem abre a discussao desta rodada. */
+  firstPlayerName: string;
   diary: DiaryEntry[];
   hapticFeedback: boolean;
   onScoreRound: (outcome: RoundOutcome, missionAchievers: string[]) => void;
@@ -21,7 +25,7 @@ const ACCENT = 'var(--accent)';
 const DANGER = 'var(--danger)';
 
 const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
-  players, secretWord, round, target, scores, diary, hapticFeedback, onScoreRound, onNewRound, onBackToStart,
+  players, secretWord, round, target, scores, lastRoundDelta, firstPlayerName, diary, hapticFeedback, onScoreRound, onNewRound, onBackToStart,
 }) => {
   const [step, setStep] = useState<Step>('intro');
   const [outcome, setOutcome] = useState<RoundOutcome | null>(null);
@@ -40,9 +44,9 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
   // Placar ordenado (maior primeiro). Empates mantêm a ordem dos jogadores.
   const ranking = useMemo(() => {
     return players
-      .map((p, i) => ({ name: p.name, score: scores[p.name] ?? 0, i }))
+      .map((p, i) => ({ name: p.name, score: scores[p.name] ?? 0, delta: lastRoundDelta[p.name] ?? 0, i }))
       .sort((a, b) => b.score - a.score);
-  }, [players, scores]);
+  }, [players, scores, lastRoundDelta]);
 
   const topScore = ranking.length > 0 ? ranking[0].score : 0;
   const champions = ranking.filter(r => r.score >= target && r.score === topScore);
@@ -78,6 +82,12 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">Peguem o impostor</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Conversem, discutam e decidam. Depois revelem para pontuar.</p>
               </div>
+              {firstPlayerName && (
+                <div className="w-full max-w-sm mx-auto mb-4 rounded-3xl px-5 py-4 text-center text-white shadow-lg champ-pop" style={{ backgroundColor: ACCENT }}>
+                  <p className="text-xs uppercase tracking-widest opacity-90 mb-1">Começa falando</p>
+                  <p className="text-2xl font-bold leading-tight">{firstPlayerName}</p>
+                </div>
+              )}
               <MiniBoard ranking={ranking} target={target} />
             </div>
           </div>
@@ -259,7 +269,13 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">{r.name}</span>
                     </div>
-                    <span className="font-bold text-lg flex-shrink-0" style={{ color: ACCENT }}>{r.score}</span>
+                    <span className="flex items-baseline gap-1.5 flex-shrink-0">
+                      {r.delta > 0 && (
+                        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white champ-pop" style={{ backgroundColor: ACCENT }}>+{r.delta}</span>
+                      )}
+                      <span className="font-bold text-lg" style={{ color: ACCENT }}>{r.score}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">/{target}</span>
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                     <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: ACCENT }} />
@@ -344,7 +360,7 @@ const ChampionshipRevealScreen: React.FC<ChampionshipRevealScreenProps> = ({
 };
 
 // Mini-placar compacto usado na tela de intro.
-const MiniBoard: React.FC<{ ranking: { name: string; score: number }[]; target: number }> = ({ ranking, target }) => {
+const MiniBoard: React.FC<{ ranking: { name: string; score: number; delta: number }[]; target: number }> = ({ ranking, target }) => {
   const top = ranking[0]?.score ?? 0;
   return (
     <div className="w-full max-w-sm mx-auto rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
@@ -356,7 +372,11 @@ const MiniBoard: React.FC<{ ranking: { name: string; score: number }[]; target: 
               <span className="text-sm w-6 text-center flex-shrink-0 text-gray-400 dark:text-gray-500">{idx + 1}</span>
               <span className={`truncate ${r.score === top && r.score > 0 ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>{r.name}</span>
             </div>
-            <span className="font-bold flex-shrink-0" style={{ color: ACCENT }}>{r.score}</span>
+            <span className="flex items-baseline gap-1.5 flex-shrink-0">
+              {r.delta > 0 && <span className="text-[11px] font-bold" style={{ color: ACCENT }}>+{r.delta}</span>}
+              <span className="font-bold" style={{ color: ACCENT }}>{r.score}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">/{target}</span>
+            </span>
           </div>
         ))}
       </div>
