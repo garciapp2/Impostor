@@ -5,7 +5,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { clientIp, hashIp } from './_lib/auth.js';
-import { readJson, writeJson, sessionPath, ROLLUP_PATH } from './_lib/blob.js';
+import { readJson, writeJson, sessionPath, ROLLUP_PATH, blobReady, BLOB_MISSING } from './_lib/blob.js';
 import { EMPTY_ROLLUP } from './_lib/types.js';
 import type { SessionRecord, GameRecord, Rollup, DeviceInfo, GeoInfo } from './_lib/types.js';
 
@@ -97,6 +97,11 @@ async function updateRollup(
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'método não permitido' });
+    return;
+  }
+
+  if (!blobReady()) {
+    res.status(503).json({ error: BLOB_MISSING });
     return;
   }
 

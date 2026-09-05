@@ -9,6 +9,15 @@ export const SESSION_PREFIX = 'sessions/';
 export const ROLLUP_PATH = 'stats/rollup.json';
 export const ATTEMPTS_PATH = 'security/attempts.json';
 
+/** O SDK do Blob lança se o token não existir; conferimos antes para poder
+ *  responder com uma mensagem útil em vez de derrubar a função. */
+export function blobReady(): boolean {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+export const BLOB_MISSING =
+  'Blob não conectado: crie o store em Storage → Blob, conecte a este projeto e refaça o deploy.';
+
 export function sessionPath(day: string, sessionId: string): string {
   return `${SESSION_PREFIX}${day}/${sessionId}.json`;
 }

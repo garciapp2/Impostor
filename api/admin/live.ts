@@ -3,7 +3,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/auth.js';
-import { readAllUnder, SESSION_PREFIX } from '../_lib/blob.js';
+import { readAllUnder, SESSION_PREFIX, blobReady, BLOB_MISSING } from '../_lib/blob.js';
 import type { SessionRecord } from '../_lib/types.js';
 
 const WINDOW_MS = 5 * 60_000;
@@ -15,6 +15,10 @@ function dayKey(offsetDays: number): string {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!requireAdmin(req, res)) return;
+  if (!blobReady()) {
+    res.status(503).json({ error: BLOB_MISSING });
+    return;
+  }
   res.setHeader('Cache-Control', 'no-store');
 
   const days = [dayKey(0), dayKey(-1)];
